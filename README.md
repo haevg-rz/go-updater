@@ -14,9 +14,10 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 - Updating of external assets (with optional compression) :floppy_disk: 
 - every asset is signed with Ed25519 :lock: 
 - Support of different asset version (like windows, linux) :apple: :lemon: 
+- Delegate to check if update is allowed or skipped :question:
 - Only a :earth_africa: CDN or :computer: FileShare is needed
 
-Upload Tool
+**Upload Tool**
 
 - Different targets
   - FileShare
