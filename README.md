@@ -7,7 +7,22 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 
 ## Feature set
 
+- Self update (of running executable or deamon/services)
+- Automatic updating :clock2: 
+- Check for update :eyes: 
+- Optional no major version update :guardsman: 
+- Updating of external assets (with optional compression) :floppy_disk: 
+- every asset is signed with Ed25519 :lock: 
+- Support of different asset version (like windows, linux) :apple: :lemon: 
+- Only a :earth_africa: CDN or :computer: FileShare is needed
 
+Upload Tool
+
+- Different targets
+  - FileShare
+  - Azure CDN
+  - more to come
+- Signing of assets
 
 ## Client
 
