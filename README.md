@@ -1,6 +1,10 @@
 # go-updater
 Go package for auto-updating binaries and other assets via HTTP Fileserver (Students project)
 
+## Install
+
+`go get github.com/haevg-rz/go-updater/update`
+
 ## Feature set
 
 
