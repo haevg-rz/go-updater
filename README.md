@@ -25,6 +25,17 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
   - more to come
 - Signing of assets
 
+## Use Case
+
+```
+/myapp.exe
+/shippedDotNetApp/mydotnetapp.exe
+/shippedDotNetApp/*.dll (and native stuff)
+/databases/database_customer_xyz.sqlite
+```
+
+`myapp.exe` uses this package to update itself and the .NET application `mydotnetapp.exe` and its dependencies and the database `database_customer_xyz.sqlite`.
+
 ## Client
 
 ```go
