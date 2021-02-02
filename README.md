@@ -50,6 +50,8 @@ func allowUpdate() bool {
 
 ```
 
+### Update external assets
+
 ```go
 
 func updateDatabaseAsset() {
@@ -75,6 +77,8 @@ func getVersion() string {
 
 ```
 
+### Update external dot net apps
+
 ```go
 func updateDotNetApp() {
 	assetDb := &update.Asset{
@@ -98,3 +102,7 @@ func getVersion() string {
 	return "0.0.1"
 }
 ```
+
+## Upload tool
+
+
