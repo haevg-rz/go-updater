@@ -28,10 +28,16 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 ## Use Case
 
 ```
-/myapp.exe
-/shippedDotNetApp/mydotnetapp.exe
-/shippedDotNetApp/*.dll (and native stuff)
-/databases/database_customer_xyz.sqlite
+myapp.exe -> https://example.org/myapp/1/myapp_win_amd64.zip
+
+(.NET 5 App)
+- /shippedFirstDotNetApp/mydotnetapp.exe  -> https://example.org/shippedFirstDotNetApp/1/shippedFirstDotNetApp_win_amd64.zip
+- /shippedFirstDotNetApp/*.dll
+
+(Single file Publish)
+- /shippedSecondDotNetApp/mydotnetapp.exe -> https://example.org/shippedSecondDotNetApp/1/shippedSecondDotNetApp_win_amd64.exe
+
+- /databases/database_customer_xyz.sqlite -> https://example.org/shippedSecondDotNetApp/1/database_customer_xyz.sqlite
 ```
 
 `myapp.exe` uses this package to update itself and the .NET application `mydotnetapp.exe` and its dependencies and the database `database_customer_xyz.sqlite`.
