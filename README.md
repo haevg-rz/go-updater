@@ -31,16 +31,28 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 myapp.exe -> https://example.org/myapp/1/myapp_win_amd64.zip
 
 (.NET 5 App)
-- /shippedFirstDotNetApp/mydotnetapp.exe  -> https://example.org/shippedFirstDotNetApp/1/shippedFirstDotNetApp_win_amd64.zip
+- /shippedFirstDotNetApp/mydotnetapp.exe  -> https://example.org/shippedFirstDotNetApp/beta/1/shippedFirstDotNetApp_win_amd64.zip
 - /shippedFirstDotNetApp/*.dll
 
 (Single file Publish)
-- /shippedSecondDotNetApp/mydotnetapp.exe -> https://example.org/shippedSecondDotNetApp/1/shippedSecondDotNetApp_win_amd64.exe
+- /shippedSecondDotNetApp/mydotnetapp.exe -> https://example.org/shippedSecondDotNetApp/beta/1/shippedSecondDotNetApp_win_amd64.exe
 
-- /databases/database_customer_xyz.sqlite -> https://example.org/shippedSecondDotNetApp/1/database_customer_xyz.sqlite
+- /databases/database_customer_xyz.sqlite -> https://example.org/shippedSecondDotNetApp/beta/1/database_customer_xyz.sqlite
 ```
 
 `myapp.exe` uses this package to update itself and the .NET application `mydotnetapp.exe` and its dependencies and the database `database_customer_xyz.sqlite`.
+
+## File Structure
+
+```
+https://example.org/{AssetName}/{Channel}/latest.txt pointing to the latest major, eg. "1"
+https://example.org/{AssetName}/{Channel}/{Major}/latest.txt pointing to the latest minor or patch, eg. "1.2.3"
+https://example.org/{AssetName}/{Channel}/{Major}/{AssetName}_{Version}_{Specs}_{FileExtension} the actual major´s minor or patch file
+```
+
+### Example
+
+**TOOO**
 
 ## Client
 
