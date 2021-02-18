@@ -81,13 +81,13 @@ func main() {
 		},
 	}
 
-	// Do a check for an update
+	// Do a check for an updater
 	_, _ = assetApp.CheckForUpdate()
 
-	// Do a self update
+	// Do a self updater
 	_, _ = assetApp.SelfUpdate()
 
-	// Check is a previously update was aborted
+	// Check is a previously updater was aborted
 	_ = assetApp.UpdateAborted()
 
 	// Start a background goroutine for continuous checks with random
@@ -120,7 +120,7 @@ func updateDatabaseAsset() {
 		TargetFolder: "db",
 	}
 
-	// Do a self update
+	// Do a self updater
 	_, _ = assetDb.SelfUpdate()
 }
 
@@ -147,7 +147,7 @@ func updateDotNetApp() {
 		TargetFolder: "MyDotNetApp",
 	}
 
-	// Do a self update
+	// Do a self updater
 	_, _ = assetDb.SelfUpdate()
 }
 

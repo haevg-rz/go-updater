@@ -26,7 +26,7 @@ UpdateSource/AssetName/Channel/Major/latest.txt pointing to the latest minor or 
 UpdateSource/AssetName/Channel/Major/AssetName_Version_Specs_FileExtension the actual major´s minor or patch file
 
 Updates have to be looked for depending on their major. Therefore one call of the getUpdatesInFolder function
-is used to get current major´s minor or patch update infos. A second call is used to look for major update infos.
+is used to get current major´s minor or patch updater infos. A second call is used to look for major updater infos.
 */
 
 // CheckForUpdates
@@ -40,7 +40,7 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) 
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
 	latestMajor := asset.getLatestMajor()
 	if latestMajor != currentMajor {
-		//Todo return update found bool
+		//Todo return updater found bool
 		majorUpdate := asset.getUpdatesInFolder(latestMajor)
 		if majorUpdate != nil {
 			availableUpdates = append(availableUpdates, *majorUpdate)
@@ -122,7 +122,7 @@ func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string
 			return update.FilePath, err
 		}
 	}
-	return updatePath, errors.New("no matching update in version json at updateServer")
+	return updatePath, errors.New("no matching updater in version json at updateServer")
 }
 
 func (asset Asset) isUpdateValidForAsset(availableUpdate AvailableUpdate, latest string) (match bool) {

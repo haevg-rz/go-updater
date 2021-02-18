@@ -15,8 +15,8 @@ type batchData struct {
 }
 
 const (
-	batchFileName  = "update.bat"
-	updateFileName = "update"
+	batchFileName  = "updater.bat"
+	updateFileName = "updater"
 	batchScript    = `Taskkill /IM {{.ProgramName}} /F
 	rename {{.ProgramName}} {{.DeprecatedName}}
 	rename {{.UpdateFileName}} {{.ProgramName}}

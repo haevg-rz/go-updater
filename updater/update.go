@@ -30,7 +30,7 @@ type UpdateInfo struct {
 }
 
 // SelfUpdate
-// Looks for the latest available updates. Applies the newest update, terminating the running process and exchanging the executable files. Then restarts the application.
+// Looks for the latest available updates. Applies the newest updater, terminating the running process and exchanging the executable files. Then restarts the application.
 func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, err error) {
 	availableUpdates, err := asset.CheckForUpdates()
 	if err != nil {
@@ -50,7 +50,7 @@ func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, err error) {
 }
 
 // Update
-// Looks for the latest available updates of an external Asset. Applies the newest update and writes a versionJson into the asset folder, which points to the new version.
+// Looks for the latest available updates of an external Asset. Applies the newest updater and writes a versionJson into the asset folder, which points to the new version.
 func (asset Asset) Update() (updatedTo UpdateInfo, err error) {
 	availableUpdates, err := asset.CheckForUpdates()
 	if err != nil {
@@ -144,7 +144,7 @@ func (asset Asset) Background(interval time.Duration, allowUpdate func() bool) (
 //Prints information on given updates.
 func (asset Asset) PrintUpdates(updates []UpdateInfo) {
 	for _, update := range updates {
-		println(fmt.Sprint(fmt.Sprint("New update for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)))
+		println(fmt.Sprint(fmt.Sprint("New updater for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)))
 		println(fmt.Sprint("Type: ", update.Type))
 		println(fmt.Sprint("Path: ", update.Path), "\n")
 	}
