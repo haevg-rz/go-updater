@@ -9,16 +9,22 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 ## Feature set
 
 - Self update (of running executable or deamon/services)
-- Automatic updating :clock2: 
 - Check for update :eyes: 
 - Optional no major version update :guardsman: 
 - Updating of external assets (with optional compression) :floppy_disk: 
-- every asset is signed with Ed25519 :lock: 
 - Support of different asset version (like windows, linux) :apple: :lemon: 
-- Delegate to check if update is allowed or skipped :question:
 - Only a :earth_africa: CDN or :computer: FileShare is needed
 
-**Upload Tool**
+under development
+
+- Automatic updating :clock2:
+- every asset is signed with Ed25519 :lock: 
+
+to be implemented
+
+- Delegate to check if update is allowed or skipped :question:
+
+**Upload Tool** (to be implemented)
 
 - Different targets
   - FileShare
@@ -46,6 +52,8 @@ myapp.exe -> https://example.org/myapp/1/myapp_win_amd64.zip
 ## File Structure
 
 ```
+CDN
+
 https://example.org/{AssetName}/{Channel}/latest.txt pointing to the latest major, eg. "1"
 https://example.org/{AssetName}/{Channel}/{Major}/latest.txt pointing to the latest minor or patch, eg. "1.2.3"
 https://example.org/{AssetName}/{Channel}/{Major}/{AssetName}_{Version}_{Specs}_{FileExtension} the actual major´s minor or patch file
@@ -82,16 +90,16 @@ func main() {
 		},
 	}
 
-	// Do a check for an updater
+	// Do a check for an update
 	_, _ = assetApp.CheckForUpdate()
 
-	// Do a self updater
+	// Do a self update
 	_, _ = assetApp.SelfUpdate()
 
-	// Check is a previously updater was aborted
+	// Check if a previous update was aborted
 	_ = assetApp.UpdateAborted()
 
-	// Start a background goroutine for continuous checks with random
+	// Start a background goroutine for continuous checks
 	go assetApp.Background(time.Hour, time.Minute*10, allowUpdate)
 
 	updateDatabaseAsset()
@@ -121,8 +129,8 @@ func updateDatabaseAsset() {
 		TargetFolder: "db",
 	}
 
-	// Do a self updater
-	_, _ = assetDb.SelfUpdate()
+	// Update asset
+	_, _ = assetDb.Update()
 }
 
 func getVersion() string {
@@ -135,7 +143,7 @@ func getVersion() string {
 
 ```go
 func updateDotNetApp() {
-	assetDb := &update.Asset{
+	assetDotNet := &update.Asset{
 		AssetVersion: getVersion(),
 		AssetName:    "MyDotNetApp",
 		Channel:      "Stable",
@@ -148,8 +156,8 @@ func updateDotNetApp() {
 		TargetFolder: "MyDotNetApp",
 	}
 
-	// Do a self updater
-	_, _ = assetDb.SelfUpdate()
+	// Update asset
+	_, _ = assetDotNet.Update()
 }
 
 func getVersion() string {
