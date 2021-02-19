@@ -2,6 +2,7 @@
 Go package for auto-updating binaries and other assets via HTTP Fileserver (Students project)
 
 [![Go](https://github.com/haevg-rz/go-updater/actions/workflows/go.yml/badge.svg)](https://github.com/haevg-rz/go-updater/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/haevg-rz/go-updater/branch/main/graph/badge.svg?token=JFFS77RP56)](https://codecov.io/gh/haevg-rz/go-updater)
 
 ## Install
 `go env -w GOPRIVATE=github.com/haevg-rz/go-updater`
