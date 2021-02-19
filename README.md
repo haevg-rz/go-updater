@@ -3,6 +3,7 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 
 ## Install
 `go env -w GOPRIVATE=github.com/haevg-rz/go-updater`
+
 `go get github.com/haevg-rz/go-updater/update`
 
 ## Feature set
