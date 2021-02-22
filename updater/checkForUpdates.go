@@ -76,7 +76,7 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo) 
 
 func (asset Asset) getLatestMajor() (latestMajor string) {
 	path := filepath.Join(asset.AssetName, asset.Channel, latestFileName)
-	data, err := asset.read(path)
+	data, err := asset.Client.readData(path)
 	printErrors(err)
 
 	latestMajor = string(data)
@@ -87,7 +87,7 @@ func (asset Asset) getLatestMajor() (latestMajor string) {
 func (asset Asset) getLatest(major string) (version string, err error) {
 	majorPath := asset.createMajorPath(major)
 	path := filepath.Join(majorPath, latestFileName)
-	data, err := asset.read(path)
+	data, err := asset.Client.readData(path)
 	return string(data), err
 }
 
@@ -109,7 +109,7 @@ func getUpdateType(currentVersion string, newVersion string) (semVerPart string)
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
 	majorPath := asset.createMajorPath(majorVersion)
 	jsonPath := filepath.Join(majorPath, fmt.Sprint(latestMinor, ".json"))
-	data, err := asset.read(jsonPath)
+	data, err := asset.Client.readData(jsonPath)
 	//TODO Slice direkt im JSON
 	var jsonContent struct {
 		AvailableUpdates []AvailableUpdate
