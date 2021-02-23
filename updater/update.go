@@ -110,33 +110,39 @@ func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 }
 
 //TODO silent Mode for printing
+
 //Background
 //Starts looking for updates in a specified interval. Use the allowUpdate function to enable/disable updates.
-func (asset Asset) Background(interval time.Duration, allowUpdate func() bool) (err error) {
+func (asset Asset) Background(interval time.Duration, allowUpdate func() bool, updateAborted func() bool) (err error) {
 	ticker := time.NewTicker(interval)
-	done := make(chan bool)
 	go func() {
 		for {
 			select {
-			case <-done:
-				return
 			case t := <-ticker.C:
-				fmt.Println("Tick at", t)
+				if updateAborted() {
+					fmt.Println("update aborted at,", t)
+					ticker.Stop()
+					return
+				}
+				fmt.Println("looking for updates at", t)
 				asset.AssetVersion = GetVersion(asset.TargetFolder, asset.AssetName)
 				newUpdates, err := asset.CheckForUpdates()
-				printErrors(err)
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
 				asset.PrintUpdates(newUpdates)
 				if allowUpdate() {
-					_, err = asset.Update()
-					printErrors(err)
+					newVersion, err := asset.Update()
+					if err != nil {
+						fmt.Println(err)
+						break
+					}
+					fmt.Println("updated ", asset.AssetName, "to", newVersion)
 				}
 			}
 		}
 	}()
-	time.Sleep(time.Second * 60)
-	ticker.Stop()
-	done <- true
-	fmt.Println("Ticker stopped")
 	return
 }
 
