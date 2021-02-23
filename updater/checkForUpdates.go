@@ -34,44 +34,43 @@ is used to get current major´s minor or patch updater infos. A second call is u
 func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) {
 	currentMajor, _, _, err := getSemanticVersioningParts(asset.AssetVersion)
 	if err != nil {
-		return availableUpdates, err
+		return nil, err
 	}
 
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
 	latestMajor := asset.getLatestMajor()
 	if latestMajor != currentMajor {
-		//Todo return updater found bool
-		majorUpdate := asset.getUpdatesInFolder(latestMajor)
-		if majorUpdate != nil {
+		majorUpdate, updateFound := asset.getUpdatesInFolder(latestMajor)
+		if updateFound == true {
 			availableUpdates = append(availableUpdates, *majorUpdate)
 		}
 	}
 
-	patchOrMinorUpdate := asset.getUpdatesInFolder(currentMajor)
-	if patchOrMinorUpdate != nil {
+	patchOrMinorUpdate, updateFound := asset.getUpdatesInFolder(currentMajor)
+	if updateFound == true {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
 	}
 	return availableUpdates, nil
 }
 
-func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo) {
+func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool) {
 	latest, err := asset.getLatest(majorVersion)
 	if err != nil {
-		return
+		return nil, false
 	}
 
 	if isUpdateNewerThanCurrent(asset.AssetVersion, latest) {
 		updatePath, err := asset.getUpdatePathFromJson(majorVersion, latest)
 		if err != nil {
-			return
+			return nil, false
 		}
 		return &UpdateInfo{
 			Version: latest,
 			Path:    updatePath,
 			Type:    getUpdateType(asset.AssetVersion, latest),
-		}
+		}, true
 	}
-	return
+	return nil, false
 }
 
 func (asset Asset) getLatestMajor() (latestMajor string) {
