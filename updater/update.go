@@ -18,6 +18,7 @@ type Asset struct {
 	AssetName     string
 	AssetVersion  string
 	Channel       string
+	Client        Client
 	CdnBaseUrl    string
 	DoMajorUpdate bool
 	Specs         map[string]string
