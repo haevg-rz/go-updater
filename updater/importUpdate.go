@@ -15,11 +15,11 @@ import (
 func (asset Asset) importUpdate(updatePath string) error {
 	updateFileExtension := filepath.Ext(updatePath)
 	assetFile := filepath.Join(asset.TargetFolder, asset.AssetName+updateFileExtension)
+
 	const backUpSuffix = ".old"
 	backUp := fmt.Sprint(assetFile, backUpSuffix)
-	_ = os.Remove(backUp)
-	err := os.Rename(assetFile, backUp)
-	if err != nil {
+
+	if err := os.Rename(assetFile, backUp); err != nil {
 		return err
 	}
 	updateData, err := asset.read(updatePath)

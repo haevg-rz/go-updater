@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"time"
 )
@@ -120,19 +121,16 @@ func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 	return content.Version
 }
 
-//TODO silent Mode for printing
-
 //Background
 //Starts looking for updates in a specified interval. Use the allowUpdate function to enable/disable updates.
-func (asset Asset) Background(interval time.Duration, allowUpdate func() bool, updateAborted func() bool, beforeUpdate func(), onUpdateExecuted func()) (err error) {
+func (asset Asset) Background(interval time.Duration, executeUpdateCallback func() (bool, error), skipUpdate func() bool, executeAfterUpdateCallback func() error) (err error) {
 	ticker := time.NewTicker(interval)
 	go func() {
 		for {
 			select {
 			case t := <-ticker.C:
-				if updateAborted() {
-					fmt.Println("update aborted at,", t)
-					ticker.Stop()
+				if skipUpdate() {
+					log.Println("update skipped at,", t)
 					return
 				}
 				fmt.Println("looking for updates at", t)
@@ -147,15 +145,21 @@ func (asset Asset) Background(interval time.Duration, allowUpdate func() bool, u
 					break
 				}
 				asset.PrintUpdates(newUpdates)
-				if allowUpdate() {
-					beforeUpdate()
+				if canExecuteUpdate, err := executeUpdateCallback(); err != nil {
+					fmt.Println(err)
+				} else if canExecuteUpdate {
 					newVersion, _, err := asset.Update()
 					if err != nil {
 						fmt.Println(err)
 						break
 					}
 					fmt.Println("updated ", asset.AssetName, "to", newVersion)
-					onUpdateExecuted()
+					if err = executeAfterUpdateCallback(); err != nil {
+						fmt.Println(err)
+						break
+					}
+				} else {
+					fmt.Println("Update not executed: executeUpdateCallback returned 'false'")
 				}
 			}
 		}
@@ -167,8 +171,9 @@ func (asset Asset) Background(interval time.Duration, allowUpdate func() bool, u
 //Prints information on given updates.
 func (asset Asset) PrintUpdates(updates []UpdateInfo) {
 	for _, update := range updates {
-		println(fmt.Sprint(fmt.Sprint("New update for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)))
-		println(fmt.Sprint("Type: ", update.Type))
-		println(fmt.Sprint("Path: ", update.Path), "\n")
+		fmt.Println("New update for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)
+		fmt.Println("Type: ", update.Type)
+		fmt.Println("Path: ", update.Path)
+		fmt.Println()
 	}
 }
