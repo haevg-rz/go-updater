@@ -15,13 +15,13 @@ import (
 func (asset Asset) importUpdate(updatePath string) error {
 	updateFileExtension := filepath.Ext(updatePath)
 	assetFile := filepath.Join(asset.TargetFolder, asset.AssetName+updateFileExtension)
+
 	const backUpSuffix = ".old"
 	backUp := fmt.Sprint(assetFile, backUpSuffix)
-	err := os.Remove(backUp)
-	printErrors(err)
-	err = os.Rename(assetFile, backUp)
-	printErrors(err)
-	updateData, err := asset.read(updatePath)
+	if err := os.Rename(assetFile, backUp); err != nil {
+		return err
+	}
+	updateData, err := asset.Client.readData(updatePath)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (asset Asset) importUpdate(updatePath string) error {
 }
 
 func (asset Asset) importSelfUpdate(updatePath string) (err error) {
-	data, err := asset.read(updatePath)
+	data, err := asset.Client.readData(updatePath)
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func (asset Asset) importSelfUpdate(updatePath string) (err error) {
 		return
 	}
 	const minisigFileExtension = ".minisig"
-	data, err = asset.read(fmt.Sprint(updatePath, minisigFileExtension))
+	data, err = asset.Client.readData(fmt.Sprint(updatePath, minisigFileExtension))
 	if err != nil {
 		return
 	}

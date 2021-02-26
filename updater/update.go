@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"time"
 )
@@ -17,6 +18,7 @@ type Asset struct {
 	AssetName     string
 	AssetVersion  string
 	Channel       string
+	Client        Client
 	CdnBaseUrl    string
 	DoMajorUpdate bool
 	Specs         map[string]string
@@ -31,40 +33,51 @@ type UpdateInfo struct {
 
 // SelfUpdate
 // Looks for the latest available updates. Applies the newest updater, terminating the running process and exchanging the executable files. Then restarts the application.
-func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, err error) {
-	availableUpdates, err := asset.CheckForUpdates()
+func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) {
+	availableUpdates, updateFound, err := asset.CheckForUpdates()
 	if err != nil {
-		return
+		return updatedTo, false, err
+	}
+	if !updateFound {
+		return updatedTo, false, nil
 	}
 	latestUpdate := asset.getLatestAllowedUpdate(availableUpdates)
 	err = asset.importSelfUpdate(latestUpdate.Path)
 	if err != nil {
-		return
+		return updatedTo, false, err
 	}
 	err = asset.applySelfUpdate()
 	if err != nil {
-		return
+		return updatedTo, false, err
 	}
 	updatedTo = latestUpdate
-	return
+	return updatedTo, true, nil
 }
 
 // Update
 // Looks for the latest available updates of an external Asset. Applies the newest updater and writes a versionJson into the asset folder, which points to the new version.
-func (asset Asset) Update() (updatedTo UpdateInfo, err error) {
-	availableUpdates, err := asset.CheckForUpdates()
+func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
+	availableUpdates, updateFound, err := asset.CheckForUpdates()
 	if err != nil {
 		return
 	}
+
+	if !updateFound {
+		return updatedTo, false, nil
+	}
+
 	latestUpdate := asset.getLatestAllowedUpdate(availableUpdates)
 	err = asset.importUpdate(latestUpdate.Path)
 	if err != nil {
-		return
+		return latestUpdate, false, err
 	}
 	updatedTo = latestUpdate
 	asset.AssetVersion = updatedTo.Version
 	err = asset.writeVersionJson(latestUpdate.Version)
-	return
+	if err != nil {
+		return latestUpdate, false, err
+	}
+	return latestUpdate, true, err
 }
 
 func (asset Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (update UpdateInfo) {
@@ -109,34 +122,49 @@ func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 	return content.Version
 }
 
-//TODO silent Mode for printing
 //Background
 //Starts looking for updates in a specified interval. Use the allowUpdate function to enable/disable updates.
-func (asset Asset) Background(interval time.Duration, allowUpdate func() bool) (err error) {
+func (asset Asset) Background(interval time.Duration, executeUpdateCallback func() (bool, error), skipUpdate func() bool, executeAfterUpdateCallback func() error) (err error) {
 	ticker := time.NewTicker(interval)
-	done := make(chan bool)
 	go func() {
 		for {
 			select {
-			case <-done:
-				return
 			case t := <-ticker.C:
-				fmt.Println("Tick at", t)
+				if skipUpdate() {
+					log.Println("update skipped at,", t)
+					return
+				}
+				fmt.Println("looking for updates at", t)
 				asset.AssetVersion = GetVersion(asset.TargetFolder, asset.AssetName)
-				newUpdates, err := asset.CheckForUpdates()
-				printErrors(err)
+				newUpdates, updateFound, err := asset.CheckForUpdates()
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				if !updateFound {
+					fmt.Println("no new updates for ", asset.AssetName, " available")
+					break
+				}
 				asset.PrintUpdates(newUpdates)
-				if allowUpdate() {
-					_, err = asset.Update()
-					printErrors(err)
+				if canExecuteUpdate, err := executeUpdateCallback(); err != nil {
+					fmt.Println(err)
+				} else if canExecuteUpdate {
+					newVersion, _, err := asset.Update()
+					if err != nil {
+						fmt.Println(err)
+						break
+					}
+					fmt.Println("updated ", asset.AssetName, "to", newVersion)
+					if err = executeAfterUpdateCallback(); err != nil {
+						fmt.Println(err)
+						break
+					}
+				} else {
+					fmt.Println("Update not executed: executeUpdateCallback returned 'false'")
 				}
 			}
 		}
 	}()
-	time.Sleep(time.Second * 60)
-	ticker.Stop()
-	done <- true
-	fmt.Println("Ticker stopped")
 	return
 }
 
@@ -144,8 +172,9 @@ func (asset Asset) Background(interval time.Duration, allowUpdate func() bool) (
 //Prints information on given updates.
 func (asset Asset) PrintUpdates(updates []UpdateInfo) {
 	for _, update := range updates {
-		println(fmt.Sprint(fmt.Sprint("New updater for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)))
-		println(fmt.Sprint("Type: ", update.Type))
-		println(fmt.Sprint("Path: ", update.Path), "\n")
+		fmt.Println("New update for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)
+		fmt.Println("Type: ", update.Type)
+		fmt.Println("Path: ", update.Path)
+		fmt.Println()
 	}
 }

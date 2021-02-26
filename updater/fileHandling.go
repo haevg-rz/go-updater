@@ -6,44 +6,64 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"strings"
 )
 
-const httpIdentifier = "http"
+type HttpClientInterface interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
-func (asset Asset) read(location string) (content []byte, err error) {
+var (
+	HttpImplementation HttpClientInterface
+)
 
-	cdnBaseUrl, err := url.Parse(asset.CdnBaseUrl)
+func init() {
+	HttpImplementation = &http.Client{}
+}
+
+type Client interface {
+	readData(location string) (data []byte, err error)
+}
+
+type HttpClient struct {
+	CdnBaseUrl string
+}
+
+type LocalClient struct {
+	CdnBaseUrl string
+}
+
+func (HttpClient HttpClient) readData(location string) ([]byte, error) {
+	location, err := combineUrlAndFilePathToUrl(HttpClient.CdnBaseUrl, location)
 	if err != nil {
-		return
+		return nil, err
 	}
-	if strings.Contains(cdnBaseUrl.Scheme, httpIdentifier) {
-		return asset.readHttp(location)
-	}
-	return asset.readLocal(location)
+	return readHttpGetRequest(location, HttpImplementation)
 }
 
-func (asset Asset) readLocal(location string) (content []byte, err error) {
-	location = filepath.Join(asset.CdnBaseUrl, location)
-	return ioutil.ReadFile(location)
-}
-
-func (asset Asset) readHttp(location string) (content []byte, err error) {
+func combineUrlAndFilePathToUrl(cdnBaseUrl string, location string) (URL string, err error) {
 	location = filepath.ToSlash(location)
-	u, err := url.Parse(asset.CdnBaseUrl)
+	u, err := url.Parse(cdnBaseUrl)
 	if err != nil {
-		return
+		return "", err
 	}
 	u.Path = path.Join(u.Path, location)
-	location = u.String()
+	return u.String(), nil
+}
 
-	client := http.Client{}
+func readHttpGetRequest(location string, client HttpClientInterface) ([]byte, error) {
 	req, err := http.NewRequest("GET", location, nil)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return
+		return nil, err
 	}
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (LocalClient LocalClient) readData(location string) (data []byte, err error) {
+	return ioutil.ReadFile(filepath.Join(LocalClient.CdnBaseUrl, location))
 }
 
 func (asset Asset) createMajorPath(major string) (majorPath string) {

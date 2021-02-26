@@ -32,10 +32,10 @@ is used to get current major´s minor or patch updater infos. A second call is u
 
 // CheckForUpdates
 // Looks for the latest updates available at the updates source. Returns information about the newest available major, minor and patch updates.
-func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) {
+func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound bool, err error) {
 	currentMajor, _, _, err := getSemanticVersioningParts(asset.AssetVersion)
 	if err != nil {
-		return nil, err
+		return availableUpdates, false, err
 	}
 
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
@@ -47,6 +47,7 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) 
 		}
 		if updateFound == true {
 			availableUpdates = append(availableUpdates, *majorUpdate)
+			updateFound = true
 		}
 	}
 
@@ -56,8 +57,9 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) 
 	}
 	if updateFound == true {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
+		updateFound = true
 	}
-	return availableUpdates, nil
+	return availableUpdates, updateFound, nil
 }
 
 func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool, err error) {
@@ -82,7 +84,7 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, 
 
 func (asset Asset) getLatestMajor() (latestMajor string) {
 	path := filepath.Join(asset.AssetName, asset.Channel, latestFileName)
-	data, err := asset.read(path)
+	data, err := asset.Client.readData(path)
 	printErrors(err)
 
 	latestMajor = string(data)
@@ -93,7 +95,7 @@ func (asset Asset) getLatestMajor() (latestMajor string) {
 func (asset Asset) getLatest(major string) (version string, err error) {
 	majorPath := asset.createMajorPath(major)
 	path := filepath.Join(majorPath, latestFileName)
-	data, err := asset.read(path)
+	data, err := asset.Client.readData(path)
 	return string(data), err
 }
 
@@ -115,7 +117,7 @@ func getUpdateType(currentVersion string, newVersion string) (semVerPart string)
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
 	majorPath := asset.createMajorPath(majorVersion)
 	jsonPath := filepath.Join(majorPath, fmt.Sprint(latestMinor, ".json"))
-	data, err := asset.read(jsonPath)
+	data, err := asset.Client.readData(jsonPath)
 	//TODO Slice direkt im JSON
 	var jsonContent struct {
 		AvailableUpdates []AvailableUpdate
