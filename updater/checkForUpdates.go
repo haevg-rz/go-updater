@@ -31,10 +31,10 @@ is used to get current major´s minor or patch updater infos. A second call is u
 
 // CheckForUpdates
 // Looks for the latest updates available at the updates source. Returns information about the newest available major, minor and patch updates.
-func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound bool, err error) {
+func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, err error) {
 	currentMajor, _, _, err := getSemanticVersioningParts(asset.AssetVersion)
 	if err != nil {
-		return availableUpdates, false, err
+		return availableUpdates, err
 	}
 
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
@@ -44,16 +44,14 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 		majorUpdate := asset.getUpdatesInFolder(latestMajor)
 		if majorUpdate != nil {
 			availableUpdates = append(availableUpdates, *majorUpdate)
-			updateFound = true
 		}
 	}
 
 	patchOrMinorUpdate := asset.getUpdatesInFolder(currentMajor)
 	if patchOrMinorUpdate != nil {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
-		updateFound = true
 	}
-	return availableUpdates, updateFound, nil
+	return availableUpdates, nil
 }
 
 func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo) {
