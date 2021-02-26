@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sort"
 )
@@ -40,40 +41,45 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
 	latestMajor := asset.getLatestMajor()
 	if latestMajor != currentMajor {
-		//Todo return updater found bool
-		majorUpdate := asset.getUpdatesInFolder(latestMajor)
-		if majorUpdate != nil {
+		majorUpdate, updateFound, err := asset.getUpdatesInFolder(latestMajor)
+		if err != nil {
+			log.Println(err)
+		}
+		if updateFound == true {
 			availableUpdates = append(availableUpdates, *majorUpdate)
 			updateFound = true
 		}
 	}
 
-	patchOrMinorUpdate := asset.getUpdatesInFolder(currentMajor)
-	if patchOrMinorUpdate != nil {
+	patchOrMinorUpdate, updateFound, err := asset.getUpdatesInFolder(currentMajor)
+	if err != nil {
+		log.Println(err)
+	}
+	if updateFound == true {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
 		updateFound = true
 	}
 	return availableUpdates, updateFound, nil
 }
 
-func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo) {
+func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool, err error) {
 	latest, err := asset.getLatest(majorVersion)
 	if err != nil {
-		return
+		return nil, false, err
 	}
 
 	if isUpdateNewerThanCurrent(asset.AssetVersion, latest) {
 		updatePath, err := asset.getUpdatePathFromJson(majorVersion, latest)
 		if err != nil {
-			return
+			return nil, false, err
 		}
 		return &UpdateInfo{
 			Version: latest,
 			Path:    updatePath,
 			Type:    getUpdateType(asset.AssetVersion, latest),
-		}
+		}, true, nil
 	}
-	return
+	return nil, false, nil
 }
 
 func (asset Asset) getLatestMajor() (latestMajor string) {
