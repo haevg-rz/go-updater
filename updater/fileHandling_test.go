@@ -76,7 +76,7 @@ func TestCreateMajorPath(t *testing.T) {
 		Channel:   "beta",
 	}
 	major := "1"
-	expected := "MyApp\\beta\\1"
+	expected := filepath.Join(testAsset.AssetName, testAsset.Channel, major)
 	//act
 	got := testAsset.createMajorPath(major)
 	//assert
