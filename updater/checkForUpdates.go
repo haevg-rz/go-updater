@@ -41,21 +41,21 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
 	latestMajor := asset.getLatestMajor()
 	if latestMajor != currentMajor {
-		majorUpdate, updateFound, err := asset.getUpdatesInFolder(latestMajor)
+		majorUpdate, majorUpdateFound, err := asset.getUpdatesInFolder(latestMajor)
 		if err != nil {
 			log.Println(err)
 		}
-		if updateFound == true {
+		if majorUpdateFound == true {
 			availableUpdates = append(availableUpdates, *majorUpdate)
 			updateFound = true
 		}
 	}
 
-	patchOrMinorUpdate, updateFound, err := asset.getUpdatesInFolder(currentMajor)
+	patchOrMinorUpdate, patchOrMinorUpdateFound, err := asset.getUpdatesInFolder(currentMajor)
 	if err != nil {
 		log.Println(err)
 	}
-	if updateFound == true {
+	if patchOrMinorUpdateFound == true {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
 		updateFound = true
 	}
