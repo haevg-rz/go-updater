@@ -68,3 +68,17 @@ func TestCombineUrlAndFilePathToUrl(t *testing.T) {
 	//assert
 	assert.Equal(t, got, expected)
 }
+
+func TestCreateMajorPath(t *testing.T) {
+	//arrange
+	testAsset := Asset{
+		AssetName: "MyApp",
+		Channel:   "beta",
+	}
+	major := "1"
+	expected := filepath.Join(testAsset.AssetName, testAsset.Channel, major)
+	//act
+	got := testAsset.createMajorPath(major)
+	//assert
+	assert.Equal(t, expected, got)
+}
