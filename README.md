@@ -5,8 +5,6 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 [![codecov](https://codecov.io/gh/haevg-rz/go-updater/branch/main/graph/badge.svg?token=JFFS77RP56)](https://codecov.io/gh/haevg-rz/go-updater)
 
 ## Install
-`go env -w GOPRIVATE=github.com/haevg-rz/go-updater`
-
 `go get github.com/haevg-rz/go-updater/update`
 
 ## Feature set
@@ -17,15 +15,12 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 - Updating of external assets (with optional compression) :floppy_disk: 
 - Support of different asset version (like windows, linux) :apple: :lemon: 
 - Only a :earth_africa: CDN or :computer: FileShare is needed
+- Delegate to check if update is allowed or skipped :question:
+- Automatic updating :clock2:
 
 under development
 
-- Automatic updating :clock2:
 - every asset is signed with Ed25519 :lock: 
-
-to be implemented
-
-- Delegate to check if update is allowed or skipped :question:
 
 **Upload Tool** (to be implemented)
 
