@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/haevg-rz/go-updater/updater"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -162,8 +163,7 @@ func CheckForUpdates(asset updater.Asset) {
 	fmt.Println("updating...")
 	if isExecutable(availableUpdates[0].Path) {
 		if err = killProcess(asset); err != nil {
-			fmt.Println(err)
-			return
+			log.Println(err)
 		}
 	}
 	updatedTo, updated, err := asset.Update()

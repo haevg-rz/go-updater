@@ -36,15 +36,12 @@ func (asset Asset) applySelfUpdate() error {
 }
 
 func writeBatchFile() (err error) {
-	err = os.Remove(batchFileName)
-	printErrors(err)
 	file, err := os.Create(batchFileName)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err = file.Close()
-		if err != nil {
+		if err = file.Close(); err != nil {
 			return
 		}
 	}()

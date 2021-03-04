@@ -78,7 +78,7 @@ func TestCreateMajorPath(t *testing.T) {
 	major := "1"
 	expected := filepath.Join(testAsset.AssetName, testAsset.Channel, major)
 	//act
-	got := testAsset.createMajorPath(major)
+	got := testAsset.getMajorPath(major)
 	//assert
 	assert.Equal(t, expected, got)
 }
