@@ -6,12 +6,11 @@ import (
 	"github.com/artdarek/go-unzip"
 	"github.com/jedisct1/go-minisign"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 )
 
-//TODO abstract and combine (importUpdate,importSelfUpdate) functions
-//TODO verify signatures for external assets
 func (asset Asset) importUpdate(updatePath string) error {
 	updateFileExtension := filepath.Ext(updatePath)
 	assetFile := filepath.Join(asset.TargetFolder, asset.AssetName+updateFileExtension)
@@ -37,7 +36,7 @@ func (asset Asset) importSelfUpdate(updatePath string) (err error) {
 		return
 	}
 	if err = ioutil.WriteFile(updateFileName, data, 0644); err != nil {
-		printErrors(err)
+		log.Println(err)
 		return
 	}
 	const minisigFileExtension = ".minisig"
@@ -47,7 +46,7 @@ func (asset Asset) importSelfUpdate(updatePath string) (err error) {
 	}
 	signatureFile := fmt.Sprint(updateFileName, minisigFileExtension)
 	if err = ioutil.WriteFile(fmt.Sprint(signatureFile), data, 0644); err != nil {
-		printErrors(err)
+		log.Println(err)
 		return
 	}
 	sigValid, err := isSignatureValid(updateFileName, signatureFile)

@@ -8,4 +8,5 @@ require (
 	github.com/jedisct1/go-minisign v0.0.0-20210106175330-e54e81d562c7
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 )
