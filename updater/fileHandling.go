@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -71,12 +72,20 @@ func (asset Asset) getPathToLatestMajor() (majorPath string) {
 	return filepath.Join(asset.AssetName, asset.Channel, latestFileName)
 }
 
-//majorPath example: MyApp\beta\3\... -> containing updates of this major
+//getMajorPath example: MyApp\beta\3\... -> containing updates of this major
 func (asset Asset) getMajorPath(major string) (majorPath string) {
 	return filepath.Join(asset.AssetName, asset.Channel, major)
 }
 
-//latestPatchInMajorDir example: MyApp\beta\3\latest.txt -> pointing to the latest patch or minor
+//getPathToLatestPatchInMajorDir example: MyApp\beta\3\latest.txt -> pointing to the latest patch or minor
 func (asset Asset) getPathToLatestPatchInMajorDir(major string) (majorPath string) {
 	return filepath.Join(asset.getMajorPath(major), latestFileName)
+}
+
+//getPathToVersionJson example: MyApp\beta\3\3.5.12.json -> containing meta information on 3.5.12 updates
+func (asset Asset) getPathToVersionJson(major string, latestMinor string) (versionJsonPath string) {
+	const jsonFileExtension = ".json"
+	majorPath := asset.getMajorPath(major)
+	jsonFileName := fmt.Sprint(latestMinor, jsonFileExtension)
+	return filepath.Join(majorPath, jsonFileName)
 }

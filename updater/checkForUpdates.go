@@ -3,9 +3,7 @@ package updater
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
-	"path/filepath"
 	"sort"
 )
 
@@ -129,25 +127,21 @@ func getUpdateType(currentVersion string, newVersion string) (semVerPart string,
 }
 
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
-	majorPath := asset.getMajorPath(majorVersion)
-	jsonPath := filepath.Join(majorPath, fmt.Sprint(latestMinor, ".json"))
-	data, err := asset.Client.readData(jsonPath)
-	//TODO Slice direkt im JSON
-	var jsonContent struct {
-		AvailableUpdates []AvailableUpdate
+	versionJsonPath := asset.getPathToVersionJson(majorVersion, latestMinor)
+	data, err := asset.Client.readData(versionJsonPath)
+	var availableUpdates []AvailableUpdate
+	if err = json.Unmarshal(data, &availableUpdates); err != nil {
+		return "", err
 	}
-	if err = json.Unmarshal(data, &jsonContent); err != nil {
-		return
-	}
-	for _, update := range jsonContent.AvailableUpdates {
-		if matches := asset.isUpdateValidForAsset(update, latestMinor); matches {
-			return update.FilePath, err
+	for _, update := range availableUpdates {
+		if matches := asset.isUpdateValid(update, latestMinor); matches {
+			return update.FilePath, nil
 		}
 	}
-	return updatePath, errors.New("no matching update in version json at updateServer")
+	return updatePath, errors.New("no matching update in version json at update server")
 }
 
-func (asset Asset) isUpdateValidForAsset(availableUpdate AvailableUpdate, latest string) (match bool) {
+func (asset Asset) isUpdateValid(availableUpdate AvailableUpdate, latest string) (match bool) {
 	assetSpecs := make([]string, 0, len(asset.Specs))
 	for k := range asset.Specs {
 		assetSpecs = append(assetSpecs, k)
