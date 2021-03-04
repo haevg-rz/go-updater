@@ -49,7 +49,6 @@ var (
 		AssetName:     AppName,
 		AssetVersion:  Version,
 		Channel:       Channel,
-		CdnBaseUrl:    CdnBaseUrl,
 		Client:        client,
 		DoMajorUpdate: true,
 		Specs: map[string]string{
@@ -63,7 +62,6 @@ var (
 		AssetVersion:  updater.GetVersion("H:\\Entwicklung\\Demo Go Updater\\Installed\\Service1", "Service1"),
 		Channel:       "Beta",
 		Client:        client,
-		CdnBaseUrl:    CdnBaseUrl,
 		DoMajorUpdate: true,
 		Specs: map[string]string{
 			"Architecture": runtime.GOARCH,
@@ -76,7 +74,6 @@ var (
 		AssetName:     "customer_database",
 		AssetVersion:  updater.GetVersion("H:\\Entwicklung\\Demo Go Updater\\Installed\\Databases", "customer_database"),
 		Channel:       "Beta",
-		CdnBaseUrl:    CdnBaseUrl,
 		Client:        client,
 		DoMajorUpdate: true,
 		TargetFolder:  "H:\\Entwicklung\\Demo Go Updater\\Installed\\Databases",
@@ -126,7 +123,7 @@ func readConsoleCommands() {
 		case "--check Service1", "-c Service1":
 			CheckForUpdates(service1)
 		case "--background Service1", "-b Service1":
-			if err := service1.Background(time.Second*10, onService1ExecuteUpdate, skipService1BackgroundUpdate, afterService1BackgroundUpdateExecuted); err != nil {
+			if err := service1.Background(time.Second*10, skipService1BackgroundUpdate, onService1ExecuteUpdate, afterService1BackgroundUpdateExecuted); err != nil {
 				fmt.Println(err)
 			}
 		case "--check customer_database":
