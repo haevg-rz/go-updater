@@ -66,6 +66,17 @@ func (LocalClient LocalClient) readData(location string) (data []byte, err error
 	return ioutil.ReadFile(filepath.Join(LocalClient.CdnBaseUrl, location))
 }
 
-func (asset Asset) createMajorPath(major string) (majorPath string) {
+//latestMajorPath example: MyApp\beta\latest.txt -> pointing to the latest major
+func (asset Asset) getPathToLatestMajor() (majorPath string) {
+	return filepath.Join(asset.AssetName, asset.Channel, latestFileName)
+}
+
+//majorPath example: MyApp\beta\3\... -> containing updates of this major
+func (asset Asset) getMajorPath(major string) (majorPath string) {
 	return filepath.Join(asset.AssetName, asset.Channel, major)
+}
+
+//latestPatchInMajorDir example: MyApp\beta\3\latest.txt -> pointing to the latest patch or minor
+func (asset Asset) getPathToLatestPatchInMajorDir(major string) (majorPath string) {
+	return filepath.Join(asset.getMajorPath(major), latestFileName)
 }

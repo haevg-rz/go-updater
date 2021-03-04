@@ -35,11 +35,14 @@ is used to get current major´s minor or patch updater infos. A second call is u
 func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound bool, err error) {
 	currentMajor, _, _, err := getSemanticVersioningParts(asset.AssetVersion)
 	if err != nil {
-		return availableUpdates, false, err
+		return nil, false, err
 	}
 
-	//TODO asset hat client und client hat Methode getLatestMajor asset.UpdateClient.GetLatestMajor
-	latestMajor := asset.getLatestMajor()
+	latestMajor, err := asset.getLatestMajor()
+	if err != nil {
+		return nil, false, err
+	}
+
 	if latestMajor != currentMajor {
 		majorUpdate, majorUpdateFound, err := asset.getUpdatesInFolder(latestMajor)
 		if err != nil {
@@ -63,7 +66,7 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 }
 
 func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool, err error) {
-	latest, err := asset.getLatest(majorVersion)
+	latest, err := asset.getLatestVersionInMajorDir(majorVersion)
 	if err != nil {
 		return nil, false, err
 	}
@@ -73,49 +76,60 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, 
 		if err != nil {
 			return nil, false, err
 		}
+		updateType, err := getUpdateType(asset.AssetVersion, latest)
+		if err != nil {
+			return nil, false, err
+		}
+
 		return &UpdateInfo{
 			Version: latest,
 			Path:    updatePath,
-			Type:    getUpdateType(asset.AssetVersion, latest),
+			Type:    updateType,
 		}, true, nil
 	}
 	return nil, false, nil
 }
 
-func (asset Asset) getLatestMajor() (latestMajor string) {
-	path := filepath.Join(asset.AssetName, asset.Channel, latestFileName)
+func (asset Asset) getLatestMajor() (latestMajor string, err error) {
+	path := asset.getPathToLatestMajor()
 	data, err := asset.Client.readData(path)
-	printErrors(err)
-
-	latestMajor = string(data)
-	printErrors(err)
-	return
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
-func (asset Asset) getLatest(major string) (version string, err error) {
-	majorPath := asset.createMajorPath(major)
-	path := filepath.Join(majorPath, latestFileName)
+func (asset Asset) getLatestVersionInMajorDir(major string) (version string, err error) {
+	path := asset.getPathToLatestPatchInMajorDir(major)
 	data, err := asset.Client.readData(path)
-	return string(data), err
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
-func getUpdateType(currentVersion string, newVersion string) (semVerPart string) {
+func getUpdateType(currentVersion string, newVersion string) (semVerPart string, err error) {
 	cMajor, cMinor, _, err := getSemanticVersioningParts(currentVersion)
-	printErrors(err)
+	if err != nil {
+		return "", err
+	}
+
 	nMajor, nMinor, _, err := getSemanticVersioningParts(newVersion)
-	printErrors(err)
+	if err != nil {
+		return "", err
+	}
 
 	if nMajor > cMajor {
-		return "major"
+		return "major", nil
 	}
 	if nMinor > cMinor {
-		return "minor"
+		return "minor", nil
 	}
-	return "patch"
+	return "patch", nil
 }
 
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
-	majorPath := asset.createMajorPath(majorVersion)
+	majorPath := asset.getMajorPath(majorVersion)
 	jsonPath := filepath.Join(majorPath, fmt.Sprint(latestMinor, ".json"))
 	data, err := asset.Client.readData(jsonPath)
 	//TODO Slice direkt im JSON
@@ -130,7 +144,7 @@ func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string
 			return update.FilePath, err
 		}
 	}
-	return updatePath, errors.New("no matching updater in version json at updateServer")
+	return updatePath, errors.New("no matching update in version json at updateServer")
 }
 
 func (asset Asset) isUpdateValidForAsset(availableUpdate AvailableUpdate, latest string) (match bool) {
