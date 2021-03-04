@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,11 +26,8 @@ const (
 	`
 )
 
-//TODO handle minisig files
-//TODO rename old exe to.old instead of OLD{fileName}.exe
 func (asset Asset) applySelfUpdate() error {
-	err := writeBatchFile()
-	if err != nil {
+	if err := writeBatchFile(); err != nil {
 		return err
 	}
 	return runWindowsBatch(batchFileName)
@@ -51,7 +49,7 @@ func writeBatchFile() (err error) {
 	}
 	parameter := batchData{
 		ProgramName:    filepath.Base(os.Args[0]),
-		DeprecatedName: "OLD" + filepath.Base(os.Args[0]),
+		DeprecatedName: fmt.Sprint(filepath.Base(os.Args[0]), ".old"),
 		UpdateFileName: updateFileName,
 		BatchFileName:  batchFileName,
 	}
