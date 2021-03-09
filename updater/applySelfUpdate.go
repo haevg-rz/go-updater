@@ -16,9 +16,8 @@ type batchData struct {
 }
 
 const (
-	batchFileName  = "updater.bat"
-	updateFileName = "updater"
-	batchScript    = `Taskkill /IM {{.ProgramName}} /F
+	batchFileName = "updater.bat"
+	batchScript   = `Taskkill /IM {{.ProgramName}} /F
 	rename {{.ProgramName}} {{.DeprecatedName}}
 	rename {{.UpdateFileName}} {{.ProgramName}}
 	start {{.ProgramName}}
@@ -26,14 +25,14 @@ const (
 	`
 )
 
-func (asset Asset) applySelfUpdate() error {
-	if err := writeBatchFile(); err != nil {
+func (asset Asset) applySelfUpdate(updateFile string) error {
+	if err := writeSelfUpdateBatch(updateFile); err != nil {
 		return err
 	}
 	return runWindowsBatch(batchFileName)
 }
 
-func writeBatchFile() (err error) {
+func writeSelfUpdateBatch(updateFile string) (err error) {
 	file, err := os.Create(batchFileName)
 	if err != nil {
 		return err
@@ -50,7 +49,7 @@ func writeBatchFile() (err error) {
 	parameter := batchData{
 		ProgramName:    filepath.Base(os.Args[0]),
 		DeprecatedName: fmt.Sprint(filepath.Base(os.Args[0]), ".old"),
-		UpdateFileName: updateFileName,
+		UpdateFileName: updateFile,
 		BatchFileName:  batchFileName,
 	}
 	return batchTemplate.Execute(file, parameter)

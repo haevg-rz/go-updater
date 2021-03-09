@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -32,7 +33,7 @@ type UpdateInfo struct {
 }
 
 // SelfUpdate
-// Looks for the latest available updates. Applies the newest updater, terminating the running process and exchanging the executable files. Then restarts the application.
+// Looks for the latest available updates. Applies the newest update, terminating the running process and exchanging the executable files. Then restarts the application.
 func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) {
 	availableUpdates, updateFound, err := asset.CheckForUpdates()
 	if err != nil {
@@ -41,18 +42,33 @@ func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) 
 	if !updateFound {
 		return UpdateInfo{}, false, nil
 	}
+
 	latestUpdate, err := asset.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
 		return UpdateInfo{}, false, err
 	}
-	err = asset.importSelfUpdate(latestUpdate.Path)
-	if err != nil {
+
+	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
+	localSigFile := asset.getLocalSigPath(localUpdateFile)
+	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
+
+	if err = asset.importFile(latestUpdate.Path, localUpdateFile); err != nil {
 		return UpdateInfo{}, false, err
 	}
-	err = asset.applySelfUpdate()
-	if err != nil {
+	if err = asset.importFile(cdnSigFile, localSigFile); err != nil {
+		log.Println(os.Remove(localUpdateFile))
 		return UpdateInfo{}, false, err
 	}
+
+	sigValid, err := isSignatureValid(localUpdateFile, localSigFile)
+	if !sigValid || (err != nil) {
+		return UpdateInfo{}, false, err
+	}
+
+	if err = asset.applySelfUpdate(localUpdateFile); err != nil {
+		return UpdateInfo{}, false, err
+	}
+
 	return latestUpdate, true, nil
 }
 
@@ -66,16 +82,22 @@ func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
 	if !updateFound {
 		return UpdateInfo{}, false, nil
 	}
+
 	latestUpdate, err := asset.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
 		return UpdateInfo{}, false, err
 	}
-	err = asset.importUpdate(latestUpdate.Path)
-	if err != nil {
+
+	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
+	if err = asset.importFile(latestUpdate.Path, localUpdateFile); err != nil {
 		return UpdateInfo{}, false, err
 	}
-	err = asset.writeVersionJson(latestUpdate.Version)
-	if err != nil {
+
+	if err = asset.applyUpdate(localUpdateFile); err != nil {
+		return UpdateInfo{}, false, err
+	}
+
+	if err = asset.writeVersionJson(latestUpdate.Version); err != nil {
 		return UpdateInfo{}, false, err
 	}
 	return latestUpdate, true, nil
@@ -103,7 +125,7 @@ func (asset Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (update
 }
 
 //GetVersion
-//Get a semantic Versioning string for the asset that is to be updated. Looks for a Version Json, written every time the asset
+//Gets a semantic Versioning string for the asset that is to be updated. Looks for a Version Json, written every time the asset
 //is updated by this module. If the json can not be found, a default version of 0.0.0 is returned.
 func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 	const defaultVersion = "0.0.0"

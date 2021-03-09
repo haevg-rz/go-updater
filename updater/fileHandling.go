@@ -1,7 +1,10 @@
 package updater
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/artdarek/go-unzip"
+	"github.com/jedisct1/go-minisign"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -67,6 +70,14 @@ func (LocalClient LocalClient) readData(location string) (data []byte, err error
 	return ioutil.ReadFile(filepath.Join(LocalClient.CdnBaseUrl, location))
 }
 
+func (asset Asset) importFile(src string, dest string) (err error) {
+	data, err := asset.Client.readData(src)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(dest, data, 0644)
+}
+
 //latestMajorPath example: MyApp\beta\latest.txt -> pointing to the latest major
 func (asset Asset) getPathToLatestMajor() (majorPath string) {
 	return filepath.Join(asset.AssetName, asset.Channel, latestFileName)
@@ -88,4 +99,74 @@ func (asset Asset) getPathToVersionJson(major string, latestMinor string) (versi
 	majorPath := asset.getMajorPath(major)
 	jsonFileName := fmt.Sprint(latestMinor, jsonFileExtension)
 	return filepath.Join(majorPath, jsonFileName)
+}
+
+//getPathToImportedUpdateFile example: installed\MyApp\update_MyApp_2.4.2.exe
+func (asset Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdateFile string) {
+	const updatePrefix = "update_"
+	cdnUpdateFileName := filepath.Base(cdnUpdateFile)
+	localUpdateFileName := fmt.Sprint(updatePrefix, cdnUpdateFileName)
+	return filepath.Join(asset.TargetFolder, localUpdateFileName)
+}
+
+//getLocalSigPath example: installed\MyApp\update_MyApp_2.4.2.exe.minisig
+func (asset Asset) getLocalSigPath(localUpdateFile string) (localSigPath string) {
+	const signatureSuffix = ".minisig"
+	return fmt.Sprint(localUpdateFile, signatureSuffix)
+}
+
+//getCdnSigPath example: cdn\MyApp\beta\2\MyApp_2.4.2.exe.minisig
+func (asset Asset) getCdnSigPath(localUpdateFile string) (localSigPath string) {
+	const signatureSuffix = ".minisig"
+	return fmt.Sprint(localUpdateFile, signatureSuffix)
+}
+
+//getPathToAssetFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe
+func (asset Asset) getPathToAssetFile(fileExt string) (assetFilePath string) {
+	assetFile := fmt.Sprint(asset.AssetName, fileExt)
+	return filepath.Join(asset.TargetFolder, assetFile)
+}
+
+//getPathToAssetBackUpFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe.old
+func (asset Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFile string) {
+	const backUpSuffix = ".old"
+	return fmt.Sprint(assetFilePath, backUpSuffix)
+}
+
+func unzipIfCompressed(updatePath string, zipSource string, zipDestination string) (err error) {
+	const compressedFileExtension = ".zip"
+	if fileExtension := filepath.Ext(updatePath); fileExtension == compressedFileExtension {
+		uz := unzip.New(zipSource, zipDestination)
+		err = uz.Extract()
+	}
+	return err
+}
+
+func (asset Asset) writeVersionJson(version string) (err error) {
+	const versionJsonEnding = "_Version.Json"
+	fileName := fmt.Sprint(asset.AssetName, versionJsonEnding)
+	filePath := filepath.Join(asset.TargetFolder, fileName)
+	versionJson := &struct{ Version string }{Version: version}
+	content, err := json.Marshal(versionJson)
+	if err != nil {
+		return
+	}
+	return ioutil.WriteFile(filePath, content, 0644)
+}
+
+func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err error) {
+	const pubKeyFile = "minisign.pub"
+	pub, err := minisign.NewPublicKeyFromFile(pubKeyFile)
+	if err != nil {
+		return
+	}
+	file, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return
+	}
+	sig, err := minisign.NewSignatureFromFile(signatureFile)
+	if err != nil {
+		return
+	}
+	return pub.Verify(file, sig)
 }
