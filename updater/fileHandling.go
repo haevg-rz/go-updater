@@ -78,8 +78,8 @@ func (asset Asset) importFile(src string, dest string) (err error) {
 	return ioutil.WriteFile(dest, data, 0644)
 }
 
-//latestMajorPath example: MyApp\beta\latest.txt -> pointing to the latest major
-func (asset Asset) getPathToLatestMajor() (majorPath string) {
+//getPathToLatestMajor example: MyApp\beta\latest.txt -> pointing to the latest major
+func (asset Asset) getPathToLatestMajor() (latestMajor string) {
 	return filepath.Join(asset.AssetName, asset.Channel, latestFileName)
 }
 
@@ -89,12 +89,12 @@ func (asset Asset) getMajorPath(major string) (majorPath string) {
 }
 
 //getPathToLatestPatchInMajorDir example: MyApp\beta\3\latest.txt -> pointing to the latest patch or minor
-func (asset Asset) getPathToLatestPatchInMajorDir(major string) (majorPath string) {
+func (asset Asset) getPathToLatestPatchInMajorDir(major string) (latest string) {
 	return filepath.Join(asset.getMajorPath(major), latestFileName)
 }
 
-//getPathToVersionJson example: MyApp\beta\3\3.5.12.json -> containing meta information on 3.5.12 updates
-func (asset Asset) getPathToVersionJson(major string, latestMinor string) (versionJsonPath string) {
+//getPathToCdnVersionJson example: MyApp\beta\3\3.5.12.json -> containing meta information on 3.5.12 updates
+func (asset Asset) getPathToCdnVersionJson(major string, latestMinor string) (versionJsonPath string) {
 	const jsonFileExtension = ".json"
 	majorPath := asset.getMajorPath(major)
 	jsonFileName := fmt.Sprint(latestMinor, jsonFileExtension)
@@ -115,10 +115,10 @@ func (asset Asset) getLocalSigPath(localUpdateFile string) (localSigPath string)
 	return fmt.Sprint(localUpdateFile, signatureSuffix)
 }
 
-//getCdnSigPath example: cdn\MyApp\beta\2\MyApp_2.4.2.exe.minisig
-func (asset Asset) getCdnSigPath(localUpdateFile string) (localSigPath string) {
+//getCdnSigPath example: MyApp\beta\2\MyApp_2.4.2.exe.minisig
+func (asset Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
 	const signatureSuffix = ".minisig"
-	return fmt.Sprint(localUpdateFile, signatureSuffix)
+	return fmt.Sprint(cdnUpdateFile, signatureSuffix)
 }
 
 //getPathToAssetFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe
@@ -133,6 +133,13 @@ func (asset Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFi
 	return fmt.Sprint(assetFilePath, backUpSuffix)
 }
 
+//getPathToLocalVersionJson example: installed\MyApp\beta\2\MyApp_Version.json
+func (asset Asset) getPathToLocalVersionJson() (versionJsonFilePath string) {
+	const versionJsonEnding = "_Version.json"
+	fileName := fmt.Sprint(asset.AssetName, versionJsonEnding)
+	return filepath.Join(asset.TargetFolder, fileName)
+}
+
 func unzipIfCompressed(updatePath string, zipSource string, zipDestination string) (err error) {
 	const compressedFileExtension = ".zip"
 	if fileExtension := filepath.Ext(updatePath); fileExtension == compressedFileExtension {
@@ -143,15 +150,13 @@ func unzipIfCompressed(updatePath string, zipSource string, zipDestination strin
 }
 
 func (asset Asset) writeVersionJson(version string) (err error) {
-	const versionJsonEnding = "_Version.Json"
-	fileName := fmt.Sprint(asset.AssetName, versionJsonEnding)
-	filePath := filepath.Join(asset.TargetFolder, fileName)
+	versionJsonPath := asset.getPathToLocalVersionJson()
 	versionJson := &struct{ Version string }{Version: version}
 	content, err := json.Marshal(versionJson)
 	if err != nil {
 		return
 	}
-	return ioutil.WriteFile(filePath, content, 0644)
+	return ioutil.WriteFile(versionJsonPath, content, 0644)
 }
 
 func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err error) {

@@ -127,7 +127,7 @@ func getUpdateType(currentVersion string, newVersion string) (semVerPart string,
 }
 
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
-	versionJsonPath := asset.getPathToVersionJson(majorVersion, latestMinor)
+	versionJsonPath := asset.getPathToCdnVersionJson(majorVersion, latestMinor)
 	data, err := asset.Client.readData(versionJsonPath)
 	var availableUpdates []AvailableUpdate
 	if err = json.Unmarshal(data, &availableUpdates); err != nil {
