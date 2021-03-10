@@ -11,41 +11,35 @@ func getSemanticVersioningParts(version string) (major string, minor string, pat
 	patch = "0"
 	parts := strings.Split(version, ".")
 	if len(parts) != 3 {
-		err = errors.New("invalid Version")
-		return
+		return "", "", "", errors.New("invalid Version")
 	}
 	major = parts[0]
 	minor = parts[1]
 	patch = parts[2]
-	return
+	return major, minor, patch, nil
 }
 
-func isUpdateNewerThanCurrent(currentVersion string, updateVersion string) bool {
-
-	if strings.Contains(strings.ToLower(currentVersion), "dev") {
-		return true
-	}
-
+func isUpdateNewerThanCurrent(currentVersion string, updateVersion string) (updateIsNewer bool, err error) {
 	currentMajor, currentMinor, currentPatch, err := getSemanticVersioningParts(currentVersion)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	updateMajor, updateMinor, updatePatch, err := getSemanticVersioningParts(updateVersion)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	if updateMajor > currentMajor {
-		return true
+		return true, nil
 	}
 
 	if updateMajor == currentMajor && updateMinor > currentMinor {
-		return true
+		return true, nil
 	}
 
 	if updateMajor == currentMajor && updateMinor == currentMinor && updatePatch > currentPatch {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
