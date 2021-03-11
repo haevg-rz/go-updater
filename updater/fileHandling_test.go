@@ -473,49 +473,6 @@ func TestAsset_getCdnSigPath(t *testing.T) {
 	}
 }
 
-func TestAsset_getPathToLocalVersionJson(t *testing.T) {
-	type fields struct {
-		AssetName     string
-		AssetVersion  string
-		Channel       string
-		Client        Client
-		DoMajorUpdate bool
-		Specs         map[string]string
-		TargetFolder  string
-	}
-	tests := []struct {
-		name                    string
-		fields                  fields
-		wantVersionJsonFilePath string
-	}{
-		{"default successful", fields{
-			AssetName:     "MyApp",
-			AssetVersion:  "2.0.0",
-			Channel:       "beta",
-			Client:        nil,
-			DoMajorUpdate: true,
-			Specs:         nil,
-			TargetFolder:  filepath.Join("installed", "MyApp"),
-		}, filepath.Join("installed", "MyApp", "MyApp_Version.json")},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			asset := Asset{
-				AssetName:     tt.fields.AssetName,
-				AssetVersion:  tt.fields.AssetVersion,
-				Channel:       tt.fields.Channel,
-				Client:        tt.fields.Client,
-				DoMajorUpdate: tt.fields.DoMajorUpdate,
-				Specs:         tt.fields.Specs,
-				TargetFolder:  tt.fields.TargetFolder,
-			}
-			if gotVersionJsonFilePath := asset.getPathToLocalVersionJson(); gotVersionJsonFilePath != tt.wantVersionJsonFilePath {
-				t.Errorf("getPathToLocalVersionJson() = %v, want %v", gotVersionJsonFilePath, tt.wantVersionJsonFilePath)
-			}
-		})
-	}
-}
-
 func TestAsset_getLocalSigPath(t *testing.T) {
 	type fields struct {
 		AssetName     string
@@ -560,6 +517,34 @@ func TestAsset_getLocalSigPath(t *testing.T) {
 			}
 			if gotLocalSigPath := asset.getLocalSigPath(tt.args.localUpdateFile); gotLocalSigPath != tt.wantLocalSigPath {
 				t.Errorf("getLocalSigPath() = %v, want %v", gotLocalSigPath, tt.wantLocalSigPath)
+			}
+		})
+	}
+}
+
+func Test_getPathToLocalVersionJson(t *testing.T) {
+	type args struct {
+		assetName    string
+		targetFolder string
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantVersionJsonFilePath string
+	}{
+		{
+			name: "default successful",
+			args: args{
+				assetName:    "MyApp",
+				targetFolder: filepath.Join("installed", "MyApp"),
+			},
+			wantVersionJsonFilePath: filepath.Join("installed", "MyApp", "MyApp_Version.json"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotVersionJsonFilePath := getPathToLocalVersionJson(tt.args.assetName, tt.args.targetFolder); gotVersionJsonFilePath != tt.wantVersionJsonFilePath {
+				t.Errorf("getPathToLocalVersionJson() = %v, want %v", gotVersionJsonFilePath, tt.wantVersionJsonFilePath)
 			}
 		})
 	}

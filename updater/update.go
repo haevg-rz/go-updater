@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -130,9 +129,8 @@ func (asset Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (update
 func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 	const defaultVersion = "0.0.0"
 	currentVersion = defaultVersion
-	fileName := fmt.Sprint(assetName, "_Version.Json")
-	path := filepath.Join(targetFolder, fileName)
-	data, err := ioutil.ReadFile(path)
+	versionJson := getPathToLocalVersionJson(assetName, targetFolder)
+	data, err := ioutil.ReadFile(versionJson)
 	if err != nil {
 		return
 	}

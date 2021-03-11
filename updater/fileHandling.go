@@ -134,10 +134,10 @@ func (asset Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFi
 }
 
 //getPathToLocalVersionJson example: installed\MyApp\beta\2\MyApp_Version.json
-func (asset Asset) getPathToLocalVersionJson() (versionJsonFilePath string) {
+func getPathToLocalVersionJson(assetName string, targetFolder string) (versionJsonFilePath string) {
 	const versionJsonEnding = "_Version.json"
-	fileName := fmt.Sprint(asset.AssetName, versionJsonEnding)
-	return filepath.Join(asset.TargetFolder, fileName)
+	fileName := fmt.Sprint(assetName, versionJsonEnding)
+	return filepath.Join(targetFolder, fileName)
 }
 
 func unzipIfCompressed(updatePath string, zipSource string, zipDestination string) (err error) {
@@ -150,7 +150,7 @@ func unzipIfCompressed(updatePath string, zipSource string, zipDestination strin
 }
 
 func (asset Asset) writeVersionJson(version string) (err error) {
-	versionJsonPath := asset.getPathToLocalVersionJson()
+	versionJsonPath := getPathToLocalVersionJson(asset.AssetName, asset.TargetFolder)
 	versionJson := &struct{ Version string }{Version: version}
 	content, err := json.Marshal(versionJson)
 	if err != nil {

@@ -111,7 +111,7 @@ func (asset Asset) getLatestVersionInMajorDir(major string) (version string, err
 	return string(data), nil
 }
 
-func getUpdateType(currentVersion string, newVersion string) (semVerPart string, err error) {
+func getUpdateType(currentVersion string, newVersion string) (updateType string, err error) {
 	cMajor, cMinor, _, err := getSemanticVersioningParts(currentVersion)
 	if err != nil {
 		return "", err
