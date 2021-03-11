@@ -49,7 +49,7 @@ func TestHttpClientReadData(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	HttpImplementation = server.Client()
+	httpImplementation = server.Client()
 	var testAsset = Asset{
 		Client: HttpClient{CdnBaseUrl: server.URL},
 	}

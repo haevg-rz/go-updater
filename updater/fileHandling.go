@@ -12,16 +12,16 @@ import (
 	"path/filepath"
 )
 
-type HttpClientInterface interface {
+type httpClientInterface interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
 var (
-	HttpImplementation HttpClientInterface
+	httpImplementation httpClientInterface
 )
 
 func init() {
-	HttpImplementation = &http.Client{}
+	httpImplementation = &http.Client{}
 }
 
 type Client interface {
@@ -41,7 +41,7 @@ func (HttpClient HttpClient) readData(location string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return readHttpGetRequest(location, HttpImplementation)
+	return readHttpGetRequest(location, httpImplementation)
 }
 
 func combineUrlAndFilePathToUrl(cdnBaseUrl string, location string) (URL string, err error) {
@@ -54,7 +54,7 @@ func combineUrlAndFilePathToUrl(cdnBaseUrl string, location string) (URL string,
 	return u.String(), nil
 }
 
-func readHttpGetRequest(location string, client HttpClientInterface) ([]byte, error) {
+func readHttpGetRequest(location string, client httpClientInterface) ([]byte, error) {
 	req, err := http.NewRequest("GET", location, nil)
 	if err != nil {
 		return nil, err
