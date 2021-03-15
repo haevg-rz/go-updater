@@ -69,23 +69,28 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, 
 		return nil, false, err
 	}
 
-	if isUpdateNewerThanCurrent(asset.AssetVersion, latest) {
-		updatePath, err := asset.getUpdatePathFromJson(majorVersion, latest)
-		if err != nil {
-			return nil, false, err
-		}
-		updateType, err := getUpdateType(asset.AssetVersion, latest)
-		if err != nil {
-			return nil, false, err
-		}
-
-		return &UpdateInfo{
-			Version: latest,
-			Path:    updatePath,
-			Type:    updateType,
-		}, true, nil
+	updateIsNewerThanCurrent, err := isUpdateNewerThanCurrent(asset.AssetVersion, latest)
+	if err != nil {
+		return nil, false, err
 	}
-	return nil, false, nil
+	if !updateIsNewerThanCurrent {
+		return nil, false, nil
+	}
+
+	updatePath, err := asset.getUpdatePathFromJson(majorVersion, latest)
+	if err != nil {
+		return nil, false, err
+	}
+	updateType, err := getUpdateType(asset.AssetVersion, latest)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &UpdateInfo{
+		Version: latest,
+		Path:    updatePath,
+		Type:    updateType,
+	}, true, nil
 }
 
 func (asset Asset) getLatestMajor() (latestMajor string, err error) {
@@ -106,7 +111,7 @@ func (asset Asset) getLatestVersionInMajorDir(major string) (version string, err
 	return string(data), nil
 }
 
-func getUpdateType(currentVersion string, newVersion string) (semVerPart string, err error) {
+func getUpdateType(currentVersion string, newVersion string) (updateType string, err error) {
 	cMajor, cMinor, _, err := getSemanticVersioningParts(currentVersion)
 	if err != nil {
 		return "", err
@@ -127,7 +132,7 @@ func getUpdateType(currentVersion string, newVersion string) (semVerPart string,
 }
 
 func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
-	versionJsonPath := asset.getPathToVersionJson(majorVersion, latestMinor)
+	versionJsonPath := asset.getPathToCdnVersionJson(majorVersion, latestMinor)
 	data, err := asset.Client.readData(versionJsonPath)
 	var availableUpdates []AvailableUpdate
 	if err = json.Unmarshal(data, &availableUpdates); err != nil {

@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,9 +15,8 @@ type batchData struct {
 }
 
 const (
-	batchFileName  = "updater.bat"
-	updateFileName = "updater"
-	batchScript    = `Taskkill /IM {{.ProgramName}} /F
+	batchFileName = "updater.bat"
+	batchScript   = `Taskkill /IM {{.ProgramName}} /F
 	rename {{.ProgramName}} {{.DeprecatedName}}
 	rename {{.UpdateFileName}} {{.ProgramName}}
 	start {{.ProgramName}}
@@ -26,14 +24,14 @@ const (
 	`
 )
 
-func (asset Asset) applySelfUpdate() error {
-	if err := writeBatchFile(); err != nil {
+func (asset Asset) applySelfUpdate(updateFile string) error {
+	if err := writeSelfUpdateBatch(updateFile); err != nil {
 		return err
 	}
 	return runWindowsBatch(batchFileName)
 }
 
-func writeBatchFile() (err error) {
+func writeSelfUpdateBatch(updateFile string) (err error) {
 	file, err := os.Create(batchFileName)
 	if err != nil {
 		return err
@@ -49,8 +47,8 @@ func writeBatchFile() (err error) {
 	}
 	parameter := batchData{
 		ProgramName:    filepath.Base(os.Args[0]),
-		DeprecatedName: fmt.Sprint(filepath.Base(os.Args[0]), ".old"),
-		UpdateFileName: updateFileName,
+		DeprecatedName: filepath.Base(os.Args[0]) + ".old",
+		UpdateFileName: updateFile,
 		BatchFileName:  batchFileName,
 	}
 	return batchTemplate.Execute(file, parameter)
@@ -59,4 +57,18 @@ func writeBatchFile() (err error) {
 func runWindowsBatch(batchFile string) error {
 	cmd := exec.Command("cmd", "/c", batchFile)
 	return cmd.Start()
+}
+
+func (asset Asset) applyUpdate(localUpdateFile string) (err error) {
+	fileExt := filepath.Ext(localUpdateFile)
+	assetFile := asset.getPathToAssetFile(fileExt)
+	backUpFile := asset.getPathToAssetBackUpFile(assetFile)
+
+	if err = os.Rename(assetFile, backUpFile); err != nil {
+		return err
+	}
+	if err = os.Rename(localUpdateFile, assetFile); err != nil {
+		return err
+	}
+	return nil
 }
