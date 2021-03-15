@@ -38,14 +38,14 @@ type LocalClient struct {
 }
 
 func (HttpClient HttpClient) readData(location string) ([]byte, error) {
-	location, err := combineUrlAndFilePathToUrl(HttpClient.CdnBaseUrl, location)
+	location, err := getTargetUrl(HttpClient.CdnBaseUrl, location)
 	if err != nil {
 		return nil, err
 	}
 	return readHttpGetRequest(location, httpImplementation)
 }
 
-func combineUrlAndFilePathToUrl(cdnBaseUrl string, location string) (URL string, err error) {
+func getTargetUrl(cdnBaseUrl string, location string) (Url string, err error) {
 	location = filepath.ToSlash(location)
 	u, err := url.Parse(cdnBaseUrl)
 	if err != nil {
