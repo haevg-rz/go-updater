@@ -65,7 +65,7 @@ func TestCombineUrlAndFilePathToUrl(t *testing.T) {
 	cdnBaseUrl := "https://myStorage.blob.core.windows.net/updatescontainer/Updates"
 	location := filepath.Join("/MyApp", "Beta", "1", "latest.txt")
 	//act
-	got, _ := combineUrlAndFilePathToUrl(cdnBaseUrl, location)
+	got, _ := getTargetUrl(cdnBaseUrl, location)
 	//assert
 	assert.Equal(t, got, expected)
 }
