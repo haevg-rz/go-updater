@@ -549,3 +549,77 @@ func Test_getPathToLocalVersionJson(t *testing.T) {
 		})
 	}
 }
+
+func TestAsset_importFile(t *testing.T) {
+	type fields struct {
+		AssetName     string
+		AssetVersion  string
+		Channel       string
+		Client        Client
+		DoMajorUpdate bool
+		Specs         map[string]string
+		TargetFolder  string
+	}
+	type args struct {
+		src  string
+		dest string
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	testFileName := "src.txt"
+	src := filepath.Join(wd, testFileName)
+
+	dest := "dest.txt"
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "default successful",
+			fields: fields{
+				AssetName:     "MyApp",
+				AssetVersion:  "",
+				Channel:       "",
+				Client:        LocalClient{},
+				DoMajorUpdate: false,
+				Specs:         nil,
+				TargetFolder:  "",
+			},
+			args: args{
+				src:  src,
+				dest: dest,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		file, err := os.Create(src)
+		if err != nil {
+			return
+		}
+		_ = file.Close()
+		t.Run(tt.name, func(t *testing.T) {
+			asset := Asset{
+				AssetName:     tt.fields.AssetName,
+				AssetVersion:  tt.fields.AssetVersion,
+				Channel:       tt.fields.Channel,
+				Client:        tt.fields.Client,
+				DoMajorUpdate: tt.fields.DoMajorUpdate,
+				Specs:         tt.fields.Specs,
+				TargetFolder:  tt.fields.TargetFolder,
+			}
+			if err := asset.saveRemoteFile(tt.args.src, tt.args.dest); (err != nil) != tt.wantErr {
+				_ = os.Remove(src)
+				_ = os.Remove(dest)
+				t.Errorf("saveRemoteFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+		_ = os.Remove(src)
+		_ = os.Remove(dest)
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 type httpClientInterface interface {
@@ -21,7 +22,7 @@ var (
 )
 
 func init() {
-	httpImplementation = &http.Client{}
+	httpImplementation = &http.Client{Timeout: 10 * time.Second}
 }
 
 type Client interface {
@@ -70,7 +71,8 @@ func (LocalClient LocalClient) readData(location string) (data []byte, err error
 	return ioutil.ReadFile(filepath.Join(LocalClient.CdnBaseUrl, location))
 }
 
-func (asset Asset) importFile(src string, dest string) (err error) {
+//TODO Reader / writer pattern (interface)
+func (asset Asset) saveRemoteFile(src string, dest string) (err error) {
 	data, err := asset.Client.readData(src)
 	if err != nil {
 		return err
@@ -130,7 +132,7 @@ func (asset Asset) getPathToAssetFile(fileExt string) (assetFilePath string) {
 //getPathToAssetBackUpFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe.old
 func (asset Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFile string) {
 	const backUpSuffix = ".old"
-	return fmt.Sprint(assetFilePath, backUpSuffix)
+	return assetFilePath + backUpSuffix
 }
 
 //getPathToLocalVersionJson example: installed\MyApp\beta\2\MyApp_Version.json

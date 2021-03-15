@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,7 +47,7 @@ func writeSelfUpdateBatch(updateFile string) (err error) {
 	}
 	parameter := batchData{
 		ProgramName:    filepath.Base(os.Args[0]),
-		DeprecatedName: fmt.Sprint(filepath.Base(os.Args[0]), ".old"),
+		DeprecatedName: filepath.Base(os.Args[0]) + ".old",
 		UpdateFileName: updateFile,
 		BatchFileName:  batchFileName,
 	}

@@ -51,10 +51,10 @@ func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) 
 	localSigFile := asset.getLocalSigPath(localUpdateFile)
 	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
 
-	if err = asset.importFile(latestUpdate.Path, localUpdateFile); err != nil {
+	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
 		return UpdateInfo{}, false, err
 	}
-	if err = asset.importFile(cdnSigFile, localSigFile); err != nil {
+	if err = asset.saveRemoteFile(cdnSigFile, localSigFile); err != nil {
 		log.Println(os.Remove(localUpdateFile))
 		return UpdateInfo{}, false, err
 	}
@@ -81,6 +81,7 @@ func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
 	if !updateFound {
 		return UpdateInfo{}, false, nil
 	}
+	//Todo mit nil arbeiten
 
 	latestUpdate, err := asset.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
@@ -88,7 +89,7 @@ func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
 	}
 
 	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
-	if err = asset.importFile(latestUpdate.Path, localUpdateFile); err != nil {
+	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
 		return UpdateInfo{}, false, err
 	}
 
