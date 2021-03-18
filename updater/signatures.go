@@ -7,7 +7,7 @@ import (
 
 var UpdateFilesPubKey string
 
-func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err error) {
+func (a Asset) isSignatureValid(fileName string, sigPath string) (sigValid bool, err error) {
 	pub, err := minisign.NewPublicKey(UpdateFilesPubKey)
 	if err != nil {
 		return
@@ -16,9 +16,21 @@ func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err
 	if err != nil {
 		return
 	}
-	sig, err := minisign.NewSignatureFromFile(signatureFile)
+	pSig, err := a.getSigFromCdn(sigPath)
 	if err != nil {
 		return
 	}
-	return pub.Verify(file, sig)
+	return pub.Verify(file, *pSig)
+}
+
+func (a Asset) getSigFromCdn(sigPath string) (pSig *minisign.Signature, err error) {
+	data, err := a.Client.readData(sigPath)
+	if err != nil {
+		return nil, err
+	}
+	sig, err := minisign.DecodeSignature(string(data))
+	if err != nil {
+		return nil, err
+	}
+	return &sig, nil
 }

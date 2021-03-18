@@ -110,12 +110,6 @@ func (asset Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdat
 	return filepath.Join(asset.TargetFolder, localUpdateFileName)
 }
 
-//getLocalSigPath example: installed\MyApp\update_MyApp_2.4.2.exe.minisig
-func (asset Asset) getLocalSigPath(localUpdateFile string) (localSigPath string) {
-	const signatureSuffix = ".minisig"
-	return fmt.Sprint(localUpdateFile, signatureSuffix)
-}
-
 //getCdnSigPath example: MyApp\beta\2\MyApp_2.4.2.exe.minisig
 func (asset Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
 	const signatureSuffix = ".minisig"

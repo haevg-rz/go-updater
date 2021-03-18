@@ -83,8 +83,6 @@ var (
 )
 
 func main() {
-	var test = updater.UpdateFilesPubKey
-	println(test)
 	printProgramMetaInfo()
 	printStartingMessage()
 	startReader()
@@ -99,6 +97,7 @@ func printProgramMetaInfo() {
 	fmt.Println("Version:\t", Version)
 	fmt.Println("BuildTime:\t", BuildTime)
 	fmt.Println("CdnBaseUrl:\t", CdnBaseUrl)
+	fmt.Println("Updates PubKey:\t", updater.UpdateFilesPubKey)
 }
 
 func printStartingMessage() {

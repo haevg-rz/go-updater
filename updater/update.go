@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"time"
 )
 
@@ -48,18 +47,13 @@ func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) 
 	}
 
 	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
-	localSigFile := asset.getLocalSigPath(localUpdateFile)
 	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
 
 	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
 		return UpdateInfo{}, false, err
 	}
-	if err = asset.saveRemoteFile(cdnSigFile, localSigFile); err != nil {
-		log.Println(os.Remove(localUpdateFile))
-		return UpdateInfo{}, false, err
-	}
 
-	sigValid, err := isSignatureValid(localUpdateFile, localSigFile)
+	sigValid, err := asset.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
 		return UpdateInfo{}, false, err
 	}
@@ -89,7 +83,14 @@ func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
 	}
 
 	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
+	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
+
 	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
+		return UpdateInfo{}, false, err
+	}
+
+	sigValid, err := asset.isSignatureValid(localUpdateFile, cdnSigFile)
+	if !sigValid || (err != nil) {
 		return UpdateInfo{}, false, err
 	}
 
