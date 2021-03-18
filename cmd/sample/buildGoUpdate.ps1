@@ -18,8 +18,8 @@ Param(
     [Parameter(Mandatory = $False)]
     [string]$channel = "Beta",
 
-    [Parameter(Mandatory = $False)]
-    [string]$rootFolder = "C:\Users\Kai.Bratvogel\go\src\go-updater\cmd\sample",
+    [Parameter(Mandatory = $True)]
+    [string]$rootFolder = "",
 
     [Parameter(Mandatory = $False)]
     [string]$sign = "true"
