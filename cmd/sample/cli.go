@@ -83,6 +83,8 @@ var (
 )
 
 func main() {
+	var test = updater.UpdateFilesPubKey
+	println(test)
 	printProgramMetaInfo()
 	printStartingMessage()
 	startReader()

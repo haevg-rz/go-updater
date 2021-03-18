@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/artdarek/go-unzip"
-	"github.com/jedisct1/go-minisign"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -159,21 +158,4 @@ func (asset Asset) writeVersionJson(version string) (err error) {
 		return
 	}
 	return ioutil.WriteFile(versionJsonPath, content, 0644)
-}
-
-func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err error) {
-	const pubKeyFile = "minisign.pub"
-	pub, err := minisign.NewPublicKeyFromFile(pubKeyFile)
-	if err != nil {
-		return
-	}
-	file, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return
-	}
-	sig, err := minisign.NewSignatureFromFile(signatureFile)
-	if err != nil {
-		return
-	}
-	return pub.Verify(file, sig)
 }
