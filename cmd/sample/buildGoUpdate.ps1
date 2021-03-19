@@ -54,7 +54,6 @@ else {
 if ($sign -eq "true") {
     .\minisign -G
     $pubKey = (Get-Content "minisign.pub")[1]
-    Write-Host $pubKey
 }
 
 $majorFolder = [System.IO.Path]::Combine($appName, $channel)

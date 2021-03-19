@@ -1,0 +1,11 @@
+[
+  {
+    "asset": "HelloWorld",
+    "channel": "Beta",
+    "version": "1.0.1",
+    "specs": {},
+    "fileExtension": ".txt",
+    "filePath": "HelloWorld\\Beta\\1\\HelloWorld_1.0.1.txt",
+    "buildTime": "2021-02-10_12:18:54"
+  }
+]

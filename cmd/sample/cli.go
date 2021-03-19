@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/haevg-rz/go-updater/updater"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -13,19 +14,56 @@ import (
 	"time"
 )
 
-/*Usage
+/*
+
+<- Information about this file ->
+	this file (cli.go) represents a demo application to showcase the features of the go-updater project.
+	It is not part of the actual go-updater library.
+
+<- Getting started ->
+	>> Updating the sample HelloWorld.txt file <<
+
+		The sample HelloWorld.txt file can be found at
+		{workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt
+
+		Steps
+		#1: build this file (cli.go) into the go-updater folder (root of the project) and run it.
+		#2: a console should open
+		#3: type '--check HelloWorld' into the console
+		#4: the console should output the content of HelloWorld.txt which is 'Hello World'
+		#5: the user gets an available update from version 1.0.0 -> 1.0.1 displayed
+		#6: type 'y' into the console to confirm to apply this update
+		#7: the file will be updated
+		#8: the console should output the new content of HelloWorld.txt which is 'Hello World And Hello Gophers!'
+		#9: done!
+		Results -->
+		#1: {workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt content changed
+			from 'HelloWorld' to 'HelloWorld And Hello Gophers!'
+		#2: {workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld_version.json content
+			changed from '1.0.0' to '1.0.1'
+
+
 <- Build ->
-	=> build the project with ldflags
+	=> in order to apply self updates, build the project with ldflags
 	-ldflags "-X main.AppName=myCore -X main.Channel=Beta -X main.Platform=windows -X main.Architecture=amd64 -X main.Version=1.0.0"
 
-<- Setup ->
-	=> provide updates in an updates directory
-		as specified on https://github.com/haevg-rz/go-updater
 
-	=> set the variable CdnBaseUrl to the path of the updates directory
+<- Setup your own assets->
+	#1: provide updates in an updates directory or on a file server
+		as specified on https://github.com/haevg-rz/go-updater and shown in this sample
 
-	=> set the TargetFolder variable of assets to update to
-		the current directory containing the asset
+	#2: create an updater.asset and fill all fields
+
+	#3: set the variable CdnBaseUrl of this assets client to the path of the updates directory.
+		for this sample its {workingDirectory}/cmd/sample/updates
+
+	#4: set the TargetFolder variable of this asset, to specify where updates should be applied to.
+		The current directory containing the asset HelloWorld is {workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt
+		This is not necessary for self updating.
+
+	#5: run asset.Update() (check and Update), asset.CheckForUpdates() (check only),
+	asset.SelfUpdate() (update the program itself), or asset.Background() (update automatically)
+	on the asset, depending on the needs of your project
 */
 
 var (
@@ -38,46 +76,17 @@ var (
 
 	//CdnBaseUrl
 	//Set the root path to the updates directory (manually, programmatically, or on build time)
-	CdnBaseUrl = `H:\Entwicklung\Demo Go Updater\UpdatePackage`
+	CdnBaseUrl string
 
-	//the concrete
-	client = updater.LocalClient{
-		CdnBaseUrl: CdnBaseUrl,
-	}
+	//client
+	//Set the type of your cdn, changing the behaviour files are read from the cdn. Http or local file reading.
+	client updater.LocalClient
 
-	selfUpdateAsset = updater.Asset{
-		AssetName:     AppName,
-		AssetVersion:  Version,
-		Channel:       Channel,
-		Client:        client,
-		DoMajorUpdate: true,
-		Specs: map[string]string{
-			"Architecture": runtime.GOARCH,
-			"Platform":     runtime.GOOS,
-		},
-	}
-
-	service1 = updater.Asset{
-		AssetName:     "Service1",
-		AssetVersion:  updater.GetVersion("H:\\Entwicklung\\Demo Go Updater\\Installed\\Service1", "Service1"),
-		Channel:       "Beta",
-		Client:        client,
-		DoMajorUpdate: true,
-		Specs: map[string]string{
-			"Architecture": runtime.GOARCH,
-			"Platform":     runtime.GOOS,
-		},
-		TargetFolder: "H:\\Entwicklung\\Demo Go Updater\\Installed\\Service1",
-	}
-
-	customerDatabase = updater.Asset{
-		AssetName:     "customer_database",
-		AssetVersion:  updater.GetVersion("H:\\Entwicklung\\Demo Go Updater\\Installed\\Databases", "customer_database"),
-		Channel:       "Beta",
-		Client:        client,
-		DoMajorUpdate: true,
-		TargetFolder:  "H:\\Entwicklung\\Demo Go Updater\\Installed\\Databases",
-	}
+	//asset
+	//Create Assets that should be updated
+	selfUpdateAsset updater.Asset
+	service1        updater.Asset //not usable in this demo
+	helloWorld      updater.Asset
 
 	reader *bufio.Reader
 )
@@ -85,6 +94,9 @@ var (
 func main() {
 	printProgramMetaInfo()
 	printStartingMessage()
+
+	setUpSamples()
+
 	startReader()
 	readConsoleCommands()
 }
@@ -106,11 +118,42 @@ func printStartingMessage() {
 	fmt.Println()
 }
 
+func setUpSamples() {
+	wd, _ := os.Getwd()
+	CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
+
+	client = updater.LocalClient{
+		CdnBaseUrl: CdnBaseUrl,
+	}
+
+	helloWorld = updater.Asset{
+		AssetName:     "HelloWorld",
+		AssetVersion:  updater.GetVersion(filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld"), "HelloWorld"),
+		Channel:       "Beta",
+		Client:        client,
+		DoMajorUpdate: true,
+		TargetFolder:  filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld"),
+	}
+
+	selfUpdateAsset = updater.Asset{
+		AssetName:     AppName,
+		AssetVersion:  Version,
+		Channel:       Channel,
+		Client:        client,
+		DoMajorUpdate: true,
+		Specs: map[string]string{
+			"Architecture": runtime.GOARCH,
+			"Platform":     runtime.GOOS,
+		},
+	}
+}
+
 func startReader() {
 	reader = bufio.NewReader(os.Stdin)
 }
 
 func readConsoleCommands() {
+	commands := []string{"--exit", "--help", "--version", "--check HelloWorld", "--check self", "--bg HelloWorld"}
 	for {
 		command, _, err := reader.ReadLine()
 		if err != nil {
@@ -118,26 +161,45 @@ func readConsoleCommands() {
 		}
 		switch string(command) {
 		case "--help":
-			fmt.Println("Listing all commands:\n--exit\n--version\n--check self\n--check customer_database\n --check Service1\n --background Service1")
+			fmt.Println("Listing all commands:")
+			for _, c := range commands {
+				fmt.Println(c)
+			}
 		case "--version":
 			printProgramMetaInfo()
-		case "--check Service1", "-c Service1":
-			CheckForUpdates(service1)
-		case "--background Service1", "-b Service1":
-			if err := service1.Background(time.Second*10, skipService1BackgroundUpdate, onService1ExecuteUpdate, afterService1BackgroundUpdateExecuted); err != nil {
-				fmt.Println(err)
-			}
-		case "--check customer_database":
-			CheckForUpdates(customerDatabase)
+		case "--check HelloWorld":
+			printHW()
+			CheckForUpdates(helloWorld)
+			printHW()
+		case "--bg HelloWorld":
+			helloWorld.Background(time.Second*4, skipHelloWorldUpdate, executeHelloWorldUpdateCallBack, executeHelloWorldAfterUpdateCallBack)
 		case "--check self":
 			CheckForSelfUpdates(selfUpdateAsset)
 		case "--exit":
 			fmt.Println("exiting program ...")
 			os.Exit(0)
+		/*
+			If there is an executable to update automatically, the usage of the Background() function could look like this
+			case "--background Service1", "-b Service1":
+			if err := service1.Background(time.Second*10, skipService1BackgroundUpdate, onService1ExecuteUpdate, afterService1BackgroundUpdateExecuted); err != nil {
+				fmt.Println(err)
+			}
+		*/
 		default:
 			fmt.Println("unrecognized command: ", string(command))
 		}
 	}
+}
+
+func printHW() {
+	wd, _ := os.Getwd()
+	file := filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "HelloWorld.txt")
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	text := string(data)
+	fmt.Println("File: ", filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "HelloWorld.txt"), "reads", text)
 }
 
 func CheckForUpdates(asset updater.Asset) {
@@ -152,16 +214,22 @@ func CheckForUpdates(asset updater.Asset) {
 		return
 	}
 	asset.PrintUpdates(availableUpdates)
-	fmt.Println("Apply Update? - if this asset is a running process, it will be shut down. (y|n) ?")
-	input, _, _ := reader.ReadLine()
-	if string(input) != "y" {
-		fmt.Println("aborted")
-		return
-	}
-	fmt.Println("updating...")
 	if isExecutable(availableUpdates[0].Path) {
+		fmt.Println("Apply Update? - if this asset is a running process, it will be shut down. (y|n) ?")
+		input, _, _ := reader.ReadLine()
+		if string(input) != "y" {
+			fmt.Println("aborted")
+			return
+		}
 		if err = killProcess(asset); err != nil {
 			log.Println(err)
+		}
+	} else {
+		fmt.Println("Apply Update? (y|n) ?")
+		input, _, _ := reader.ReadLine()
+		if string(input) != "y" {
+			fmt.Println("aborted")
+			return
 		}
 	}
 	updatedTo, updated, err := asset.Update()
@@ -243,6 +311,25 @@ func skipService1BackgroundUpdate() bool {
 	return false
 }
 
+func isExecutable(file string) bool {
+	return filepath.Ext(file) == ".exe"
+}
+
+func skipHelloWorldUpdate() bool {
+	//logic to skip an update
+	return false
+}
+
+func executeHelloWorldUpdateCallBack() (bool, error) {
+	//actions that should be taken before updating, e.g. stopping a process or db connection
+	return true, nil
+}
+
+func executeHelloWorldAfterUpdateCallBack() error {
+	//actions that should be taken after updating, e.g. starting a process or db connection
+	return nil
+}
+
 func onService1ExecuteUpdate() (bool, error) {
 	if err := killProcess(service1); err != nil {
 		return false, err
@@ -255,8 +342,4 @@ func afterService1BackgroundUpdateExecuted() error {
 		return err
 	}
 	return nil
-}
-
-func isExecutable(file string) bool {
-	return filepath.Ext(file) == ".exe"
 }
