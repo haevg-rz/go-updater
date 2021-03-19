@@ -473,55 +473,6 @@ func TestAsset_getCdnSigPath(t *testing.T) {
 	}
 }
 
-func TestAsset_getLocalSigPath(t *testing.T) {
-	type fields struct {
-		AssetName     string
-		AssetVersion  string
-		Channel       string
-		Client        Client
-		DoMajorUpdate bool
-		Specs         map[string]string
-		TargetFolder  string
-	}
-	type args struct {
-		localUpdateFile string
-	}
-	tests := []struct {
-		name             string
-		fields           fields
-		args             args
-		wantLocalSigPath string
-	}{
-		{"default successful", fields{
-			AssetName:     "MyApp",
-			AssetVersion:  "2.0.0",
-			Channel:       "beta",
-			Client:        nil,
-			DoMajorUpdate: true,
-			Specs:         nil,
-			TargetFolder:  filepath.Join("installed", "MyApp"),
-		}, args{
-			localUpdateFile: filepath.Join("installed", "MyApp", "update_MyApp_2.4.2.exe"),
-		}, filepath.Join("installed", "MyApp", "update_MyApp_2.4.2.exe.minisig")},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			asset := Asset{
-				AssetName:     tt.fields.AssetName,
-				AssetVersion:  tt.fields.AssetVersion,
-				Channel:       tt.fields.Channel,
-				Client:        tt.fields.Client,
-				DoMajorUpdate: tt.fields.DoMajorUpdate,
-				Specs:         tt.fields.Specs,
-				TargetFolder:  tt.fields.TargetFolder,
-			}
-			if gotLocalSigPath := asset.getLocalSigPath(tt.args.localUpdateFile); gotLocalSigPath != tt.wantLocalSigPath {
-				t.Errorf("getLocalSigPath() = %v, want %v", gotLocalSigPath, tt.wantLocalSigPath)
-			}
-		})
-	}
-}
-
 func Test_getPathToLocalVersionJson(t *testing.T) {
 	type args struct {
 		assetName    string

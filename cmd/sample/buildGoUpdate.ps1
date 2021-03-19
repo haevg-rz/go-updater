@@ -53,6 +53,7 @@ else {
 
 if ($sign -eq "true") {
     .\minisign -G
+    $pubKey = (Get-Content "minisign.pub")[1]
 }
 
 $majorFolder = [System.IO.Path]::Combine($appName, $channel)
@@ -79,7 +80,12 @@ foreach ($item in $platforms ) {
    
     $fileName = ("{0}_{1}_{2}_{3}{4}" -f $appName, $item.GOARCH, $item.GOOS, $version, $extension)
     $buildOutput = [System.IO.Path]::Combine($buildFolder, $fileName)
-    $executeExpression = "go build -ldflags ""-s -w -X main.AppName={0} -X main.Channel={1} -X main.Architecture={2} -X main.Plattform={3} -X main.Version={4} -X main.BuildTime={5}"" -trimpath -o {6}" -f $appName, $channel, $item.GOARCH, $item.GOOS, $version, $buildTime, $buildOutput
+    if ($sign -eq "false") {
+        $executeExpression = "go build -ldflags ""-s -w -X main.AppName={0} -X main.Channel={1} -X main.Architecture={2} -X main.Plattform={3} -X main.Version={4} -X main.BuildTime={5}"" -trimpath -o {6}" -f $appName, $channel, $item.GOARCH, $item.GOOS, $version, $buildTime, $buildOutput
+    }
+    else {
+        $executeExpression = "go build -ldflags ""-s -w -X main.AppName={0} -X main.Channel={1} -X main.Architecture={2} -X main.Plattform={3} -X main.Version={4} -X main.BuildTime={5} -X github.com/haevg-rz/go-updater/updater.UpdateFilesPubKey={6}"" -trimpath -o {7}" -f $appName, $channel, $item.GOARCH, $item.GOOS, $version, $buildTime, $pubKey, $buildOutput
+    }
     Write-Host "Execute", $executeExpression -ForegroundColor Gray
     Invoke-Expression $executeExpression
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/artdarek/go-unzip"
-	"github.com/jedisct1/go-minisign"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -111,12 +110,6 @@ func (asset Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdat
 	return filepath.Join(asset.TargetFolder, localUpdateFileName)
 }
 
-//getLocalSigPath example: installed\MyApp\update_MyApp_2.4.2.exe.minisig
-func (asset Asset) getLocalSigPath(localUpdateFile string) (localSigPath string) {
-	const signatureSuffix = ".minisig"
-	return fmt.Sprint(localUpdateFile, signatureSuffix)
-}
-
 //getCdnSigPath example: MyApp\beta\2\MyApp_2.4.2.exe.minisig
 func (asset Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
 	const signatureSuffix = ".minisig"
@@ -159,21 +152,4 @@ func (asset Asset) writeVersionJson(version string) (err error) {
 		return
 	}
 	return ioutil.WriteFile(versionJsonPath, content, 0644)
-}
-
-func isSignatureValid(fileName string, signatureFile string) (sigValid bool, err error) {
-	const pubKeyFile = "minisign.pub"
-	pub, err := minisign.NewPublicKeyFromFile(pubKeyFile)
-	if err != nil {
-		return
-	}
-	file, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return
-	}
-	sig, err := minisign.NewSignatureFromFile(signatureFile)
-	if err != nil {
-		return
-	}
-	return pub.Verify(file, sig)
 }
