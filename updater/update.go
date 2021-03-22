@@ -32,34 +32,34 @@ type UpdateInfo struct {
 
 // SelfUpdate
 // Looks for the latest available updates. Applies the newest update, terminating the running process and exchanging the executable files. Then restarts the application.
-func (a Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) {
+func (a Asset) SelfUpdate() (updatedTo *UpdateInfo, updated bool, err error) {
 	availableUpdates, updateFound, err := a.CheckForUpdates()
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 	if !updateFound {
-		return UpdateInfo{}, false, nil
+		return nil, false, nil
 	}
 
 	latestUpdate, err := a.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
 	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
 	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	sigValid, err := a.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	if err = a.applySelfUpdate(localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	return latestUpdate, true, nil
@@ -67,62 +67,62 @@ func (a Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) {
 
 // Update
 // Looks for the latest available updates of an external Asset. Applies the newest updater and writes a versionJson into the asset folder, which points to the new version.
-func (a Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
+func (a Asset) Update() (updatedTo *UpdateInfo, updated bool, err error) {
 	availableUpdates, updateFound, err := a.CheckForUpdates()
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 	if !updateFound {
-		return UpdateInfo{}, false, nil
+		return nil, false, nil
 	}
 	//Todo mit nil arbeiten
 
 	latestUpdate, err := a.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
 	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
 	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	sigValid, err := a.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	if err = a.applyUpdate(localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
 	if err = a.writeVersionJson(latestUpdate.Version); err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 	return latestUpdate, true, nil
 }
 
-func (a Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (update UpdateInfo, err error) {
+func (a Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (updateInfo *UpdateInfo, err error) {
 	if a.DoMajorUpdate {
-		for _, update = range availableUpdates {
+		for _, update := range availableUpdates {
 			if update.Type == "major" {
-				return update, nil
+				return &update, nil
 			}
 		}
 	}
-	for _, update = range availableUpdates {
+	for _, update := range availableUpdates {
 		if update.Type == "minor" {
-			return update, nil
+			return &update, nil
 		}
 	}
-	for _, update = range availableUpdates {
+	for _, update := range availableUpdates {
 		if update.Type == "patch" {
-			return update, nil
+			return &update, nil
 		}
 	}
-	return UpdateInfo{}, errors.New("no update has an update Type")
+	return nil, errors.New("no update has an update Type")
 }
 
 //GetVersion

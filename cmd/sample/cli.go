@@ -262,7 +262,7 @@ func CheckForUpdates(asset updater.Asset) {
 		fmt.Println("could not update", asset.AssetName)
 		return
 	}
-	fmt.Println("successfully updated ", asset.AssetName, " to ", updatedTo)
+	fmt.Println("successfully updated ", asset.AssetName, " to ", (*updatedTo).Version)
 	return
 }
 
@@ -294,7 +294,7 @@ func CheckForSelfUpdates(asset updater.Asset) {
 		fmt.Println("could not update", asset.AssetName)
 		return
 	}
-	fmt.Println("successfully updated ", asset.AssetName, " to ", updatedTo.Version)
+	fmt.Println("successfully updated ", asset.AssetName, " to ", (*updatedTo).Version)
 	return
 }
 
