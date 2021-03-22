@@ -24,7 +24,7 @@ const (
 	`
 )
 
-func (asset Asset) applySelfUpdate(updateFile string) error {
+func (a Asset) applySelfUpdate(updateFile string) error {
 	if err := writeSelfUpdateBatch(updateFile); err != nil {
 		return err
 	}
@@ -59,10 +59,10 @@ func runWindowsBatch(batchFile string) error {
 	return cmd.Start()
 }
 
-func (asset Asset) applyUpdate(localUpdateFile string) (err error) {
+func (a Asset) applyUpdate(localUpdateFile string) (err error) {
 	fileExt := filepath.Ext(localUpdateFile)
-	assetFile := asset.getPathToAssetFile(fileExt)
-	backUpFile := asset.getPathToAssetBackUpFile(assetFile)
+	assetFile := a.getPathToAssetFile(fileExt)
+	backUpFile := a.getPathToAssetBackUpFile(assetFile)
 
 	if err = os.Rename(assetFile, backUpFile); err != nil {
 		return err
