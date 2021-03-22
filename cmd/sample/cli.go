@@ -27,14 +27,23 @@ import (
 		{workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt
 
 		Steps
-		#1: build this file (cli.go) into the go-updater folder (root of the project) and run it.
-		#2: a console should open
+		#1: build this file (cli.go)
+
+			go build cli.go -ldflags "-X github.com/haevg-rz/go-updater/updater.UpdateFilesPubKey=
+			RWQWiK4rVAaJQhk42Y8obU0llCEwBcVWwzliy8T0bYj0WC+JZR8xdntY" -o {go-updater directory}
+
+			use -ldflags to set the public Key matching to the private Key which was used to
+			encrypt the sample updates
+
+			use -o to build the program into the go-updater folder (root of the project)
+		#2: run it. A console should open
 		#3: type '--check HelloWorld' into the console
 		#4: the console should output the content of HelloWorld.txt which is 'Hello World'
 		#5: the user gets an available update from version 1.0.0 -> 1.0.1 displayed
 		#6: type 'y' into the console to confirm to apply this update
 		#7: the file will be updated
-		#8: the console should output the new content of HelloWorld.txt which is 'Hello World And Hello Gophers!'
+		#8: the console should output the new content of HelloWorld.txt
+			which is 'Hello World And Hello Gophers!'
 		#9: done!
 		Results -->
 		#1: {workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt content changed
@@ -44,6 +53,11 @@ import (
 
 
 <- Build ->
+	=> in order to apply any updates, set the publicKey to the matching private key with which
+		the signatures were created.
+	-ldflags "-X github.com/haevg-rz/go-updater/updater.UpdateFilesPubKey=
+			RWQWiK4rVAaJQhk42Y8obU0llCEwBcVWwzliy8T0bYj0WC+JZR8xdntY"
+
 	=> in order to apply self updates, build the project with ldflags
 	-ldflags "-X main.AppName=myCore -X main.Channel=Beta -X main.Platform=windows -X main.Architecture=amd64 -X main.Version=1.0.0"
 
@@ -199,7 +213,8 @@ func printHW() {
 		fmt.Println(err)
 	}
 	text := string(data)
-	fmt.Println("File: ", filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "HelloWorld.txt"), "reads", text)
+	fmt.Println("file: ", filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "HelloWorld.txt"))
+	fmt.Println("reads: ", text)
 }
 
 func CheckForUpdates(asset updater.Asset) {
@@ -247,7 +262,7 @@ func CheckForUpdates(asset updater.Asset) {
 		fmt.Println("could not update", asset.AssetName)
 		return
 	}
-	fmt.Println("successfully updated ", asset.AssetName, " to ", updatedTo)
+	fmt.Println("successfully updated ", asset.AssetName, " to ", (*updatedTo).Version)
 	return
 }
 
@@ -279,7 +294,7 @@ func CheckForSelfUpdates(asset updater.Asset) {
 		fmt.Println("could not update", asset.AssetName)
 		return
 	}
-	fmt.Println("successfully updated ", asset.AssetName, " to ", updatedTo.Version)
+	fmt.Println("successfully updated ", asset.AssetName, " to ", (*updatedTo).Version)
 	return
 }
 

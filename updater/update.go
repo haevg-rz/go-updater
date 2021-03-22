@@ -32,34 +32,34 @@ type UpdateInfo struct {
 
 // SelfUpdate
 // Looks for the latest available updates. Applies the newest update, terminating the running process and exchanging the executable files. Then restarts the application.
-func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) {
-	availableUpdates, updateFound, err := asset.CheckForUpdates()
+func (a Asset) SelfUpdate() (updatedTo *UpdateInfo, updated bool, err error) {
+	availableUpdates, updateFound, err := a.CheckForUpdates()
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 	if !updateFound {
-		return UpdateInfo{}, false, nil
+		return nil, false, nil
 	}
 
-	latestUpdate, err := asset.getLatestAllowedUpdate(availableUpdates)
+	latestUpdate, err := a.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
-	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
-	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
+	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
+	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
-	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
+		return nil, false, err
 	}
 
-	sigValid, err := asset.isSignatureValid(localUpdateFile, cdnSigFile)
+	sigValid, err := a.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
-	if err = asset.applySelfUpdate(localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+	if err = a.applySelfUpdate(localUpdateFile); err != nil {
+		return nil, false, err
 	}
 
 	return latestUpdate, true, nil
@@ -67,62 +67,62 @@ func (asset Asset) SelfUpdate() (updatedTo UpdateInfo, updated bool, err error) 
 
 // Update
 // Looks for the latest available updates of an external Asset. Applies the newest updater and writes a versionJson into the asset folder, which points to the new version.
-func (asset Asset) Update() (updatedTo UpdateInfo, updated bool, err error) {
-	availableUpdates, updateFound, err := asset.CheckForUpdates()
+func (a Asset) Update() (updatedTo *UpdateInfo, updated bool, err error) {
+	availableUpdates, updateFound, err := a.CheckForUpdates()
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 	if !updateFound {
-		return UpdateInfo{}, false, nil
+		return nil, false, nil
 	}
 	//Todo mit nil arbeiten
 
-	latestUpdate, err := asset.getLatestAllowedUpdate(availableUpdates)
+	latestUpdate, err := a.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
-	localUpdateFile := asset.getPathToImportedUpdateFile(latestUpdate.Path)
-	cdnSigFile := asset.getCdnSigPath(latestUpdate.Path)
+	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
+	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
-	if err = asset.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
+		return nil, false, err
 	}
 
-	sigValid, err := asset.isSignatureValid(localUpdateFile, cdnSigFile)
+	sigValid, err := a.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
-		return UpdateInfo{}, false, err
+		return nil, false, err
 	}
 
-	if err = asset.applyUpdate(localUpdateFile); err != nil {
-		return UpdateInfo{}, false, err
+	if err = a.applyUpdate(localUpdateFile); err != nil {
+		return nil, false, err
 	}
 
-	if err = asset.writeVersionJson(latestUpdate.Version); err != nil {
-		return UpdateInfo{}, false, err
+	if err = a.writeVersionJson(latestUpdate.Version); err != nil {
+		return nil, false, err
 	}
 	return latestUpdate, true, nil
 }
 
-func (asset Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (update UpdateInfo, err error) {
-	if asset.DoMajorUpdate {
-		for _, update = range availableUpdates {
+func (a Asset) getLatestAllowedUpdate(availableUpdates []UpdateInfo) (updateInfo *UpdateInfo, err error) {
+	if a.DoMajorUpdate {
+		for _, update := range availableUpdates {
 			if update.Type == "major" {
-				return update, nil
+				return &update, nil
 			}
 		}
 	}
-	for _, update = range availableUpdates {
+	for _, update := range availableUpdates {
 		if update.Type == "minor" {
-			return update, nil
+			return &update, nil
 		}
 	}
-	for _, update = range availableUpdates {
+	for _, update := range availableUpdates {
 		if update.Type == "patch" {
-			return update, nil
+			return &update, nil
 		}
 	}
-	return UpdateInfo{}, errors.New("no update has an update Type")
+	return nil, errors.New("no update has an update Type")
 }
 
 //GetVersion
@@ -147,7 +147,7 @@ func GetVersion(targetFolder string, assetName string) (currentVersion string) {
 
 //Background
 //Starts looking for updates in a specified interval. Use the allowUpdate function to enable/disable updates.
-func (asset Asset) Background(interval time.Duration, skipUpdate func() bool, executeUpdateCallback func() (bool, error), executeAfterUpdateCallback func() error) (err error) {
+func (a Asset) Background(interval time.Duration, skipUpdate func() bool, executeUpdateCallback func() (bool, error), executeAfterUpdateCallback func() error) (err error) {
 	ticker := time.NewTicker(interval)
 	go func() {
 		for {
@@ -158,17 +158,17 @@ func (asset Asset) Background(interval time.Duration, skipUpdate func() bool, ex
 					return
 				}
 				fmt.Println("looking for updates at", t)
-				asset.AssetVersion = GetVersion(asset.TargetFolder, asset.AssetName)
-				newUpdates, updateFound, err := asset.CheckForUpdates()
+				a.AssetVersion = GetVersion(a.TargetFolder, a.AssetName)
+				newUpdates, updateFound, err := a.CheckForUpdates()
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
 				if !updateFound {
-					fmt.Println("no new updates for ", asset.AssetName, " available")
+					fmt.Println("no new updates for ", a.AssetName, " available")
 					break
 				}
-				asset.PrintUpdates(newUpdates)
+				a.PrintUpdates(newUpdates)
 				canExecuteUpdate, err := executeUpdateCallback()
 				if err != nil {
 					log.Println(err)
@@ -177,12 +177,12 @@ func (asset Asset) Background(interval time.Duration, skipUpdate func() bool, ex
 					fmt.Println("Update not executed: executeUpdateCallback returned 'false'")
 					break
 				}
-				newVersion, _, err := asset.Update()
+				newVersion, _, err := a.Update()
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
-				fmt.Println("updated ", asset.AssetName, "to", newVersion)
+				fmt.Println("updated ", a.AssetName, "to", newVersion)
 				if err = executeAfterUpdateCallback(); err != nil {
 					fmt.Println(err)
 					break
@@ -195,9 +195,9 @@ func (asset Asset) Background(interval time.Duration, skipUpdate func() bool, ex
 
 //PrintUpdates
 //Prints information on given updates.
-func (asset Asset) PrintUpdates(updates []UpdateInfo) {
+func (a Asset) PrintUpdates(updates []UpdateInfo) {
 	for _, update := range updates {
-		fmt.Println("New update for ", asset.AssetName, " ", asset.AssetVersion, " ---> ", update.Version)
+		fmt.Println("New update for ", a.AssetName, " ", a.AssetVersion, " ---> ", update.Version)
 		fmt.Println("Type: ", update.Type)
 		fmt.Println("Path: ", update.Path)
 		fmt.Println()

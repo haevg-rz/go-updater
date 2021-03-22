@@ -30,19 +30,19 @@ is used to get current major´s minor or patch updater infos. A second call is u
 
 // CheckForUpdates
 // Looks for the latest updates available at the updates source. Returns information about the newest available major, minor and patch updates.
-func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound bool, err error) {
-	currentMajor, _, _, err := getSemanticVersioningParts(asset.AssetVersion)
+func (a Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound bool, err error) {
+	currentMajor, _, _, err := getSemanticVersioningParts(a.AssetVersion)
 	if err != nil {
 		return nil, false, err
 	}
 
-	latestMajor, err := asset.getLatestMajor()
+	latestMajor, err := a.getLatestMajor()
 	if err != nil {
 		return nil, false, err
 	}
 
 	if latestMajor != currentMajor {
-		majorUpdate, majorUpdateFound, err := asset.getUpdatesInFolder(latestMajor)
+		majorUpdate, majorUpdateFound, err := a.getUpdatesInFolder(latestMajor)
 		if err != nil {
 			log.Println(err)
 		}
@@ -52,7 +52,7 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 		}
 	}
 
-	patchOrMinorUpdate, patchOrMinorUpdateFound, err := asset.getUpdatesInFolder(currentMajor)
+	patchOrMinorUpdate, patchOrMinorUpdateFound, err := a.getUpdatesInFolder(currentMajor)
 	if err != nil {
 		log.Println(err)
 	}
@@ -63,13 +63,13 @@ func (asset Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound
 	return availableUpdates, updateFound, nil
 }
 
-func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool, err error) {
-	latest, err := asset.getLatestVersionInMajorDir(majorVersion)
+func (a Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, updateFound bool, err error) {
+	latest, err := a.getLatestVersionInMajorDir(majorVersion)
 	if err != nil {
 		return nil, false, err
 	}
 
-	updateIsNewerThanCurrent, err := isUpdateNewerThanCurrent(asset.AssetVersion, latest)
+	updateIsNewerThanCurrent, err := isUpdateNewerThanCurrent(a.AssetVersion, latest)
 	if err != nil {
 		return nil, false, err
 	}
@@ -77,11 +77,11 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, 
 		return nil, false, nil
 	}
 
-	updatePath, err := asset.getUpdatePathFromJson(majorVersion, latest)
+	updatePath, err := a.getUpdatePathFromJson(majorVersion, latest)
 	if err != nil {
 		return nil, false, err
 	}
-	updateType, err := getUpdateType(asset.AssetVersion, latest)
+	updateType, err := getUpdateType(a.AssetVersion, latest)
 	if err != nil {
 		return nil, false, err
 	}
@@ -93,18 +93,18 @@ func (asset Asset) getUpdatesInFolder(majorVersion string) (update *UpdateInfo, 
 	}, true, nil
 }
 
-func (asset Asset) getLatestMajor() (latestMajor string, err error) {
-	path := asset.getPathToLatestMajor()
-	data, err := asset.Client.readData(path)
+func (a Asset) getLatestMajor() (latestMajor string, err error) {
+	path := a.getPathToLatestMajor()
+	data, err := a.Client.readData(path)
 	if err != nil {
 		return "", err
 	}
 	return string(data), nil
 }
 
-func (asset Asset) getLatestVersionInMajorDir(major string) (version string, err error) {
-	path := asset.getPathToLatestPatchInMajorDir(major)
-	data, err := asset.Client.readData(path)
+func (a Asset) getLatestVersionInMajorDir(major string) (version string, err error) {
+	path := a.getPathToLatestPatchInMajorDir(major)
+	data, err := a.Client.readData(path)
 	if err != nil {
 		return "", err
 	}
@@ -131,32 +131,32 @@ func getUpdateType(currentVersion string, newVersion string) (updateType string,
 	return "patch", nil
 }
 
-func (asset Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
-	versionJsonPath := asset.getPathToCdnVersionJson(majorVersion, latestMinor)
-	data, err := asset.Client.readData(versionJsonPath)
+func (a Asset) getUpdatePathFromJson(majorVersion string, latestMinor string) (updatePath string, err error) {
+	versionJsonPath := a.getPathToCdnVersionJson(majorVersion, latestMinor)
+	data, err := a.Client.readData(versionJsonPath)
 	var availableUpdates []AvailableUpdate
 	if err = json.Unmarshal(data, &availableUpdates); err != nil {
 		return "", err
 	}
 	for _, update := range availableUpdates {
-		if matches := asset.isUpdateValid(update, latestMinor); matches {
+		if matches := a.isUpdateValid(update, latestMinor); matches {
 			return update.FilePath, nil
 		}
 	}
 	return updatePath, errors.New("no matching update in version json at update server")
 }
 
-func (asset Asset) isUpdateValid(availableUpdate AvailableUpdate, latest string) (match bool) {
-	assetSpecs := make([]string, 0, len(asset.Specs))
-	for k := range asset.Specs {
+func (a Asset) isUpdateValid(availableUpdate AvailableUpdate, latest string) (match bool) {
+	assetSpecs := make([]string, 0, len(a.Specs))
+	for k := range a.Specs {
 		assetSpecs = append(assetSpecs, k)
 	}
 	sort.Strings(assetSpecs)
 
-	if asset.AssetName != availableUpdate.Asset {
+	if a.AssetName != availableUpdate.Asset {
 		return false
 	}
-	if asset.Channel != availableUpdate.Channel {
+	if a.Channel != availableUpdate.Channel {
 		return false
 	}
 	if latest != availableUpdate.Version {
@@ -173,7 +173,7 @@ func (asset Asset) isUpdateValid(availableUpdate AvailableUpdate, latest string)
 		return false
 	}
 	for i := range assetSpecs {
-		if asset.Specs[assetSpecs[i]] != availableUpdate.Specs[updateSpecs[i]] {
+		if a.Specs[assetSpecs[i]] != availableUpdate.Specs[updateSpecs[i]] {
 			return false
 		}
 	}

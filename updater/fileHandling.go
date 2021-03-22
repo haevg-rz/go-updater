@@ -36,8 +36,8 @@ type LocalClient struct {
 	CdnBaseUrl string
 }
 
-func (HttpClient HttpClient) readData(location string) ([]byte, error) {
-	location, err := getTargetUrl(HttpClient.CdnBaseUrl, location)
+func (h HttpClient) readData(location string) ([]byte, error) {
+	location, err := getTargetUrl(h.CdnBaseUrl, location)
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +66,13 @@ func readHttpGetRequest(location string, client httpClientInterface) ([]byte, er
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (LocalClient LocalClient) readData(location string) (data []byte, err error) {
-	return ioutil.ReadFile(filepath.Join(LocalClient.CdnBaseUrl, location))
+func (l LocalClient) readData(location string) (data []byte, err error) {
+	return ioutil.ReadFile(filepath.Join(l.CdnBaseUrl, location))
 }
 
 //TODO Reader / writer pattern (interface)
-func (asset Asset) saveRemoteFile(src string, dest string) (err error) {
-	data, err := asset.Client.readData(src)
+func (a Asset) saveRemoteFile(src string, dest string) (err error) {
+	data, err := a.Client.readData(src)
 	if err != nil {
 		return err
 	}
@@ -80,50 +80,50 @@ func (asset Asset) saveRemoteFile(src string, dest string) (err error) {
 }
 
 //getPathToLatestMajor example: MyApp\beta\latest.txt -> pointing to the latest major
-func (asset Asset) getPathToLatestMajor() (latestMajor string) {
-	return filepath.Join(asset.AssetName, asset.Channel, latestFileName)
+func (a Asset) getPathToLatestMajor() (latestMajor string) {
+	return filepath.Join(a.AssetName, a.Channel, latestFileName)
 }
 
 //getMajorPath example: MyApp\beta\3\... -> containing updates of this major
-func (asset Asset) getMajorPath(major string) (majorPath string) {
-	return filepath.Join(asset.AssetName, asset.Channel, major)
+func (a Asset) getMajorPath(major string) (majorPath string) {
+	return filepath.Join(a.AssetName, a.Channel, major)
 }
 
 //getPathToLatestPatchInMajorDir example: MyApp\beta\3\latest.txt -> pointing to the latest patch or minor
-func (asset Asset) getPathToLatestPatchInMajorDir(major string) (latest string) {
-	return filepath.Join(asset.getMajorPath(major), latestFileName)
+func (a Asset) getPathToLatestPatchInMajorDir(major string) (latest string) {
+	return filepath.Join(a.getMajorPath(major), latestFileName)
 }
 
 //getPathToCdnVersionJson example: MyApp\beta\3\3.5.12.json -> containing meta information on 3.5.12 updates
-func (asset Asset) getPathToCdnVersionJson(major string, latestMinor string) (versionJsonPath string) {
+func (a Asset) getPathToCdnVersionJson(major string, latestMinor string) (versionJsonPath string) {
 	const jsonFileExtension = ".json"
-	majorPath := asset.getMajorPath(major)
+	majorPath := a.getMajorPath(major)
 	jsonFileName := fmt.Sprint(latestMinor, jsonFileExtension)
 	return filepath.Join(majorPath, jsonFileName)
 }
 
 //getPathToImportedUpdateFile example: installed\MyApp\update_MyApp_2.4.2.exe
-func (asset Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdateFile string) {
+func (a Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdateFile string) {
 	const updatePrefix = "update_"
 	cdnUpdateFileName := filepath.Base(cdnUpdateFile)
 	localUpdateFileName := fmt.Sprint(updatePrefix, cdnUpdateFileName)
-	return filepath.Join(asset.TargetFolder, localUpdateFileName)
+	return filepath.Join(a.TargetFolder, localUpdateFileName)
 }
 
 //getCdnSigPath example: MyApp\beta\2\MyApp_2.4.2.exe.minisig
-func (asset Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
+func (a Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
 	const signatureSuffix = ".minisig"
 	return fmt.Sprint(cdnUpdateFile, signatureSuffix)
 }
 
 //getPathToAssetFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe
-func (asset Asset) getPathToAssetFile(fileExt string) (assetFilePath string) {
-	assetFile := fmt.Sprint(asset.AssetName, fileExt)
-	return filepath.Join(asset.TargetFolder, assetFile)
+func (a Asset) getPathToAssetFile(fileExt string) (assetFilePath string) {
+	assetFile := fmt.Sprint(a.AssetName, fileExt)
+	return filepath.Join(a.TargetFolder, assetFile)
 }
 
 //getPathToAssetBackUpFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe.old
-func (asset Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFile string) {
+func (a Asset) getPathToAssetBackUpFile(assetFilePath string) (assetBackUpFile string) {
 	const backUpSuffix = ".old"
 	return assetFilePath + backUpSuffix
 }
@@ -144,8 +144,8 @@ func unzipIfCompressed(updatePath string, zipSource string, zipDestination strin
 	return err
 }
 
-func (asset Asset) writeVersionJson(version string) (err error) {
-	versionJsonPath := getPathToLocalVersionJson(asset.AssetName, asset.TargetFolder)
+func (a Asset) writeVersionJson(version string) (err error) {
+	versionJsonPath := getPathToLocalVersionJson(a.AssetName, a.TargetFolder)
 	versionJson := &struct{ Version string }{Version: version}
 	content, err := json.Marshal(versionJson)
 	if err != nil {
