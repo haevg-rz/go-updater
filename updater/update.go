@@ -46,7 +46,7 @@ func (a Asset) SelfUpdate() (updatedTo *UpdateInfo, updated bool, err error) {
 		return nil, false, err
 	}
 
-	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
+	localUpdateFile := a.getPathToLocalUpdateFile(latestUpdate.Path)
 	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
 	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {
@@ -75,14 +75,13 @@ func (a Asset) Update() (updatedTo *UpdateInfo, updated bool, err error) {
 	if !updateFound {
 		return nil, false, nil
 	}
-	//Todo mit nil arbeiten
 
 	latestUpdate, err := a.getLatestAllowedUpdate(availableUpdates)
 	if err != nil {
 		return nil, false, err
 	}
 
-	localUpdateFile := a.getPathToImportedUpdateFile(latestUpdate.Path)
+	localUpdateFile := a.getPathToLocalUpdateFile(latestUpdate.Path)
 	cdnSigFile := a.getCdnSigPath(latestUpdate.Path)
 
 	if err = a.saveRemoteFile(latestUpdate.Path, localUpdateFile); err != nil {

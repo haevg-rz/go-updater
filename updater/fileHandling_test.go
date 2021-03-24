@@ -253,7 +253,7 @@ func TestAsset_getPathToImportedUpdateFile(t *testing.T) {
 		}, args{
 			cdnUpdateFile: filepath.Join("MyApp", "beta", "2", "MyApp_x64_2.4.2.exe"),
 		}, "update_MyApp_x64_2.4.2.exe"},
-		{"default successful", fields{
+		{"no target folder provided", fields{
 			AssetName:     "MyApp",
 			AssetVersion:  "2.0.0",
 			Channel:       "beta",
@@ -264,6 +264,18 @@ func TestAsset_getPathToImportedUpdateFile(t *testing.T) {
 		}, args{
 			cdnUpdateFile: filepath.Join("MyApp", "beta", "2", "MyApp_x64_2.4.2.exe"),
 		}, filepath.Join("installed", "MyApp", "update_MyApp_x64_2.4.2.exe")},
+
+		{"update is a .zip file", fields{
+			AssetName:     "MyApp",
+			AssetVersion:  "2.0.0",
+			Channel:       "beta",
+			Client:        nil,
+			DoMajorUpdate: true,
+			Specs:         nil,
+			TargetFolder:  filepath.Join("installed", "MyApp"),
+		}, args{
+			cdnUpdateFile: filepath.Join("MyApp", "beta", "2", "MyApp_x64_2.4.2.zip"),
+		}, filepath.Join("installed", "update_MyApp_x64_2.4.2.zip")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -276,8 +288,8 @@ func TestAsset_getPathToImportedUpdateFile(t *testing.T) {
 				Specs:         tt.fields.Specs,
 				TargetFolder:  tt.fields.TargetFolder,
 			}
-			if gotLocalUpdateFile := asset.getPathToImportedUpdateFile(tt.args.cdnUpdateFile); gotLocalUpdateFile != tt.wantLocalUpdateFile {
-				t.Errorf("getPathToImportedUpdateFile() = %v, want %v", gotLocalUpdateFile, tt.wantLocalUpdateFile)
+			if gotLocalUpdateFile := asset.getPathToLocalUpdateFile(tt.args.cdnUpdateFile); gotLocalUpdateFile != tt.wantLocalUpdateFile {
+				t.Errorf("getPathToLocalUpdateFile() = %v, want %v", gotLocalUpdateFile, tt.wantLocalUpdateFile)
 			}
 		})
 	}

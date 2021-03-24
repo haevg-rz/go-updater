@@ -3,7 +3,6 @@ package updater
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/artdarek/go-unzip"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 )
+
+const zipExt = ".zip"
 
 type httpClientInterface interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -79,6 +80,16 @@ func (a Asset) saveRemoteFile(src string, dest string) (err error) {
 	return ioutil.WriteFile(dest, data, 0644)
 }
 
+func (a Asset) writeVersionJson(version string) (err error) {
+	versionJsonPath := getPathToLocalVersionJson(a.AssetName, a.TargetFolder)
+	versionJson := &struct{ Version string }{Version: version}
+	content, err := json.Marshal(versionJson)
+	if err != nil {
+		return
+	}
+	return ioutil.WriteFile(versionJsonPath, content, 0644)
+}
+
 //getPathToLatestMajor example: MyApp\beta\latest.txt -> pointing to the latest major
 func (a Asset) getPathToLatestMajor() (latestMajor string) {
 	return filepath.Join(a.AssetName, a.Channel, latestFileName)
@@ -102,12 +113,17 @@ func (a Asset) getPathToCdnVersionJson(major string, latestMinor string) (versio
 	return filepath.Join(majorPath, jsonFileName)
 }
 
-//getPathToImportedUpdateFile example: installed\MyApp\update_MyApp_2.4.2.exe
-func (a Asset) getPathToImportedUpdateFile(cdnUpdateFile string) (localUpdateFile string) {
+//getPathToLocalUpdateFile example: installed\MyApp\update_MyApp_2.4.2.exe
+func (a Asset) getPathToLocalUpdateFile(cdnUpdateFile string) (localUpdateFile string) {
 	const updatePrefix = "update_"
 	cdnUpdateFileName := filepath.Base(cdnUpdateFile)
 	localUpdateFileName := fmt.Sprint(updatePrefix, cdnUpdateFileName)
-	return filepath.Join(a.TargetFolder, localUpdateFileName)
+	if fileExt := filepath.Ext(cdnUpdateFile); fileExt == zipExt {
+		targetFolderParentDir := filepath.Dir(a.TargetFolder)
+		return filepath.Join(targetFolderParentDir, localUpdateFileName)
+	} else {
+		return filepath.Join(a.TargetFolder, localUpdateFileName)
+	}
 }
 
 //getCdnSigPath example: MyApp\beta\2\MyApp_2.4.2.exe.minisig
@@ -133,23 +149,4 @@ func getPathToLocalVersionJson(assetName string, targetFolder string) (versionJs
 	const versionJsonEnding = "_Version.json"
 	fileName := fmt.Sprint(assetName, versionJsonEnding)
 	return filepath.Join(targetFolder, fileName)
-}
-
-func unzipIfCompressed(updatePath string, zipSource string, zipDestination string) (err error) {
-	const compressedFileExtension = ".zip"
-	if fileExtension := filepath.Ext(updatePath); fileExtension == compressedFileExtension {
-		uz := unzip.New(zipSource, zipDestination)
-		err = uz.Extract()
-	}
-	return err
-}
-
-func (a Asset) writeVersionJson(version string) (err error) {
-	versionJsonPath := getPathToLocalVersionJson(a.AssetName, a.TargetFolder)
-	versionJson := &struct{ Version string }{Version: version}
-	content, err := json.Marshal(versionJson)
-	if err != nil {
-		return
-	}
-	return ioutil.WriteFile(versionJsonPath, content, 0644)
 }

@@ -46,7 +46,7 @@ func (a Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound boo
 		if err != nil {
 			log.Println(err)
 		}
-		if majorUpdateFound == true {
+		if majorUpdateFound {
 			availableUpdates = append(availableUpdates, *majorUpdate)
 			updateFound = true
 		}
@@ -56,7 +56,7 @@ func (a Asset) CheckForUpdates() (availableUpdates []UpdateInfo, updateFound boo
 	if err != nil {
 		log.Println(err)
 	}
-	if patchOrMinorUpdateFound == true {
+	if patchOrMinorUpdateFound {
 		availableUpdates = append(availableUpdates, *patchOrMinorUpdate)
 		updateFound = true
 	}

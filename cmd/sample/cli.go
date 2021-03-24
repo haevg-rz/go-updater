@@ -101,6 +101,7 @@ var (
 	selfUpdateAsset updater.Asset
 	service1        updater.Asset //not usable in this demo
 	helloWorld      updater.Asset
+	images          updater.Asset
 
 	reader *bufio.Reader
 )
@@ -149,6 +150,15 @@ func setUpSamples() {
 		TargetFolder:  filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld"),
 	}
 
+	images = updater.Asset{
+		AssetName:     "Images",
+		AssetVersion:  updater.GetVersion(filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "Images"), "Images"),
+		Channel:       "Beta",
+		Client:        client,
+		DoMajorUpdate: true,
+		TargetFolder:  filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "Images"),
+	}
+
 	selfUpdateAsset = updater.Asset{
 		AssetName:     AppName,
 		AssetVersion:  Version,
@@ -167,7 +177,7 @@ func startReader() {
 }
 
 func readConsoleCommands() {
-	commands := []string{"--exit", "--help", "--version", "--check HelloWorld", "--check self", "--bg HelloWorld"}
+	commands := []string{"--exit", "--help", "--version", "--check HelloWorld", "--check self", "--bg HelloWorld", "--check Images"}
 	for {
 		command, _, err := reader.ReadLine()
 		if err != nil {
@@ -187,6 +197,8 @@ func readConsoleCommands() {
 			printHW()
 		case "--bg HelloWorld":
 			helloWorld.Background(time.Second*4, skipHelloWorldUpdate, executeHelloWorldUpdateCallBack, executeHelloWorldAfterUpdateCallBack)
+		case "--check Images":
+			CheckForUpdates(images)
 		case "--check self":
 			CheckForSelfUpdates(selfUpdateAsset)
 		case "--exit":
