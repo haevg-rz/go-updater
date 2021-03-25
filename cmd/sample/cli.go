@@ -107,10 +107,10 @@ var (
 )
 
 func main() {
+	setUpSamples()
+
 	printProgramMetaInfo()
 	printStartingMessage()
-
-	setUpSamples()
 
 	startReader()
 	readConsoleCommands()
