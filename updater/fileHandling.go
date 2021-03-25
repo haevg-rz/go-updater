@@ -134,8 +134,12 @@ func (a Asset) getCdnSigPath(cdnUpdateFile string) (cdnSigPath string) {
 
 //getPathToAssetFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe
 func (a Asset) getPathToAssetFile(fileExt string) (assetFilePath string) {
-	assetFile := fmt.Sprint(a.AssetName, fileExt)
-	return filepath.Join(a.TargetFolder, assetFile)
+	if fileExt == zipExt {
+		return a.TargetFolder
+	} else {
+		assetFile := a.AssetName + fileExt
+		return filepath.Join(a.TargetFolder, assetFile)
+	}
 }
 
 //getPathToAssetBackUpFile example: installed\MyApp\beta\2\MyApp_2.4.2.exe.old

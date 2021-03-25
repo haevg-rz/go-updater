@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"fmt"
 	"github.com/Flaque/filet"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -200,10 +199,21 @@ func TestAsset_getPathToAssetFile(t *testing.T) {
 			Client:        nil,
 			DoMajorUpdate: true,
 			Specs:         nil,
-			TargetFolder:  "",
+			TargetFolder:  filepath.Join("installed", "MyApp"),
 		}, args{
 			fileExt: ".exe",
-		}, fmt.Sprint("MyApp", ".exe")},
+		}, filepath.Join("installed", "MyApp", "MyApp.exe")},
+		{"zipped update", fields{
+			AssetName:     "MyApp",
+			AssetVersion:  "2.0.0",
+			Channel:       "beta",
+			Client:        nil,
+			DoMajorUpdate: true,
+			Specs:         nil,
+			TargetFolder:  filepath.Join("installed", "MyApp"),
+		}, args{
+			fileExt: ".zip",
+		}, filepath.Join("installed", "MyApp")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -55,10 +57,12 @@ func (a Asset) SelfUpdate() (updatedTo *UpdateInfo, updated bool, err error) {
 
 	sigValid, err := a.isSignatureValid(localUpdateFile, cdnSigFile)
 	if !sigValid || (err != nil) {
+		os.Remove(localUpdateFile)
 		return nil, false, err
 	}
 
 	if err = a.applySelfUpdate(localUpdateFile); err != nil {
+		os.Remove(localUpdateFile)
 		return nil, false, err
 	}
 
@@ -198,7 +202,7 @@ func (a Asset) PrintUpdates(updates []UpdateInfo) {
 	for _, update := range updates {
 		fmt.Println("New update for ", a.AssetName, " ", a.AssetVersion, " ---> ", update.Version)
 		fmt.Println("Type: ", update.Type)
-		fmt.Println("Path: ", update.Path)
+		fmt.Println("Path: ", filepath.Join(update.Path))
 		fmt.Println()
 	}
 }
