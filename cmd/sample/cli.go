@@ -90,7 +90,7 @@ var (
 
 	//CdnBaseUrl
 	//Set the root path to the updates directory (manually, programmatically, or on build time)
-	CdnBaseUrl = "https://kaisupdates.blob.core.windows.net/updatescontainer/updates"
+	CdnBaseUrl string
 
 	//client
 	//Set the type of your cdn, changing the behaviour files are read from the cdn. Http or local file reading.
@@ -135,9 +135,9 @@ func printStartingMessage() {
 
 func setUpSamples() {
 	wd, _ := os.Getwd()
-	//CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
+	CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
 
-	client = updater.HttpClient{
+	client = updater.LocalClient{
 		CdnBaseUrl: CdnBaseUrl,
 	}
 
