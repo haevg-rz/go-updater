@@ -9,7 +9,7 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 
 ## Feature set
 
-- Self update (of running executable or deamon/services)
+- Self update (of running executable or deamon/services) 
 - Check for update :eyes: 
 - Optional no major version update :guardsman: 
 - Updating of external assets (with optional compression) :floppy_disk: 
@@ -17,9 +17,6 @@ Go package for auto-updating binaries and other assets via HTTP Fileserver (Stud
 - Only a :earth_africa: CDN or :computer: FileShare is needed
 - Delegate to check if update is allowed or skipped :question:
 - Automatic updating :clock2:
-
-under development
-
 - every asset is signed with Ed25519 :lock: 
 
 **Upload Tool** (to be implemented)
@@ -33,33 +30,24 @@ under development
 ## Use Case
 
 ```
-myapp.exe -> https://example.org/myapp/1/myapp_win_amd64.zip
+an asset {single file, service, database, entire folder, ...} needs to be updated
 
-(.NET 5 App)
-- /shippedFirstDotNetApp/mydotnetapp.exe  -> https://example.org/shippedFirstDotNetApp/beta/1/shippedFirstDotNetApp_win_amd64.zip
-- /shippedFirstDotNetApp/*.dll
-
-(Single file Publish)
-- /shippedSecondDotNetApp/mydotnetapp.exe -> https://example.org/shippedSecondDotNetApp/beta/1/shippedSecondDotNetApp_win_amd64.exe
-
-- /databases/database_customer_xyz.sqlite -> https://example.org/shippedSecondDotNetApp/beta/1/database_customer_xyz.sqlite
-```
-
-`myapp.exe` uses this package to update itself and the .NET application `mydotnetapp.exe` and its dependencies and the database `database_customer_xyz.sqlite`.
 
 ## File Structure
 
 ```
-CDN
+CDN {http Server, local filesystem}
 
 https://example.org/{AssetName}/{Channel}/latest.txt pointing to the latest major, eg. "1"
 https://example.org/{AssetName}/{Channel}/{Major}/latest.txt pointing to the latest minor or patch, eg. "1.2.3"
-https://example.org/{AssetName}/{Channel}/{Major}/{AssetName}_{Version}_{Specs}_{FileExtension} the actual major´s minor or patch file
+https://example.org/{AssetName}/{Channel}/{Major}/{version}.json containing metainfo e.g. filepath, assetName, channel to the actual update of this version
+https://example.org/{AssetName}/{Channel}/{Major}/{AssetName}_{Version}_{Specs}_{FileExtension} the actual major´s minor or patch update file
+https://example.org/{AssetName}/{Channel}/{Major}/{AssetName}_{Version}_{Specs}_{FileExtension}.minisign the signature of the actual update file
 ```
 
 ### Example
 
-**TOOO**
+see cmd/sample to download a working sample
 
 ## Client
 
@@ -80,7 +68,7 @@ func main() {
 		AssetVersion:  Version,
 		AssetName:     AppName,
 		Channel:       "Stable",
-		CdnBaseURL:    "https://cdn.company.com/updates/",
+		Client:        updater.HttpClient{CdnBaseUrl: "https://example.org"},
 		DoMajorUpdate: false,
 		Specs: map[string]string{
 			"Arch": runtime.GOARCH,
@@ -94,18 +82,11 @@ func main() {
 	// Do a self update
 	_, _ = assetApp.SelfUpdate()
 
-	// Check if a previous update was aborted
-	_ = assetApp.UpdateAborted()
-
 	// Start a background goroutine for continuous checks
-	go assetApp.Background(time.Hour, time.Minute*10, allowUpdate)
+	go assetApp.Background(time.Hours * 24, skipAssetAppUpdate, executeAssetAppUpdateCallBack, executeAssetAppAfterUpdateCallBack)
 
 	updateDatabaseAsset()
 	updateDotNetApp()
-}
-
-func allowUpdate() bool {
-	return true
 }
 
 ```
@@ -116,10 +97,10 @@ func allowUpdate() bool {
 
 func updateDatabaseAsset() {
 	assetDb := &update.Asset{
-		AssetVersion: getVersion(),
+		AssetVersion: updater.getVersion(),
 		AssetName:    "MyDatabases",
 		Channel:      "Stable",
-		CdnBaseURL:   "https://cdn.company.com/updates/",
+		Client:       updater.HttpClient{CdnBaseUrl: "https://example.org"},
 		Specs: map[string]string{
 			"Name": "MyContacts",
 			"Type": "SQlite",
@@ -129,10 +110,6 @@ func updateDatabaseAsset() {
 
 	// Update asset
 	_, _ = assetDb.Update()
-}
-
-func getVersion() string {
-	return "0.0.1"
 }
 
 ```
@@ -162,7 +139,3 @@ func getVersion() string {
 	return "0.0.1"
 }
 ```
-
-## Upload tool
-
-
