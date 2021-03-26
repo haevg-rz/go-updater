@@ -138,7 +138,7 @@ func setUpSamples() {
 	wd, _ := os.Getwd()
 	CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
 
-	client = updater.AzureHttpClient{
+	client = updater.HttpClient{
 		CdnBaseUrl: CdnBaseUrl,
 	}
 
