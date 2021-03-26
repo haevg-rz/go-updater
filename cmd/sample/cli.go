@@ -27,6 +27,7 @@ import (
 		{workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt
 
 		Steps
+		#0: download the minisign.exe from https://jedisct1.github.io/minisign/ into cmd/sample
 		#1: build this file (cli.go)
 
 			go build cli.go -ldflags "-X github.com/haevg-rz/go-updater/updater.UpdateFilesPubKey=
@@ -137,7 +138,7 @@ func setUpSamples() {
 	wd, _ := os.Getwd()
 	CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
 
-	client = updater.LocalClient{
+	client = updater.AzureHttpClient{
 		CdnBaseUrl: CdnBaseUrl,
 	}
 

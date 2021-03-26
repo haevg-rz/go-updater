@@ -1,8 +1,10 @@
 package updater
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -35,6 +37,43 @@ type HttpClient struct {
 
 type LocalClient struct {
 	CdnBaseUrl string
+}
+
+type AzureHttpClient struct {
+	AccountName string
+	AccountKey  string
+	CdnBaseUrl  string
+	Container   string
+	UpdatesRoot string
+}
+
+func (a AzureHttpClient) readData(location string) ([]byte, error) {
+	location = filepath.Join(a.UpdatesRoot, location)
+	location = filepath.ToSlash(location)
+
+	credential, err := azblob.NewSharedKeyCredential(a.AccountName, a.AccountKey)
+	if err != nil {
+		return nil, err
+	}
+
+	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+	u, err := url.Parse(a.CdnBaseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceURL := azblob.NewServiceURL(*u, p)
+	ctx := context.Background()
+	containerURL := serviceURL.NewContainerURL(a.Container)
+	blobURL := containerURL.NewBlockBlobURL(location)
+
+	get, err := blobURL.Download(ctx, 0, 0, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	reader := get.Body(azblob.RetryReaderOptions{})
+	return ioutil.ReadAll(reader)
 }
 
 func (h HttpClient) readData(location string) ([]byte, error) {
