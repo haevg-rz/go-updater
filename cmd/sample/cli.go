@@ -27,6 +27,7 @@ import (
 		{workingDirectory}/cmd/sample/installed/HelloWorld/HelloWorld.txt
 
 		Steps
+		#0: download the minisign.exe from https://jedisct1.github.io/minisign/ into cmd/sample
 		#1: build this file (cli.go)
 
 			go build cli.go -ldflags "-X github.com/haevg-rz/go-updater/updater.UpdateFilesPubKey=
@@ -94,22 +95,23 @@ var (
 
 	//client
 	//Set the type of your cdn, changing the behaviour files are read from the cdn. Http or local file reading.
-	client updater.LocalClient
+	client updater.Client
 
 	//asset
 	//Create Assets that should be updated
 	selfUpdateAsset updater.Asset
 	service1        updater.Asset //not usable in this demo
 	helloWorld      updater.Asset
+	images          updater.Asset
 
 	reader *bufio.Reader
 )
 
 func main() {
+	setUpSamples()
+
 	printProgramMetaInfo()
 	printStartingMessage()
-
-	setUpSamples()
 
 	startReader()
 	readConsoleCommands()
@@ -136,7 +138,7 @@ func setUpSamples() {
 	wd, _ := os.Getwd()
 	CdnBaseUrl = filepath.Join(wd, "cmd", "sample", "updates")
 
-	client = updater.LocalClient{
+	client = updater.HttpClient{
 		CdnBaseUrl: CdnBaseUrl,
 	}
 
@@ -147,6 +149,15 @@ func setUpSamples() {
 		Client:        client,
 		DoMajorUpdate: true,
 		TargetFolder:  filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld"),
+	}
+
+	images = updater.Asset{
+		AssetName:     "Images",
+		AssetVersion:  updater.GetVersion(filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "Images"), "Images"),
+		Channel:       "Beta",
+		Client:        client,
+		DoMajorUpdate: true,
+		TargetFolder:  filepath.Join(wd, "cmd", "sample", "installed", "HelloWorld", "Images"),
 	}
 
 	selfUpdateAsset = updater.Asset{
@@ -167,7 +178,7 @@ func startReader() {
 }
 
 func readConsoleCommands() {
-	commands := []string{"--exit", "--help", "--version", "--check HelloWorld", "--check self", "--bg HelloWorld"}
+	commands := []string{"--exit", "--help", "--version", "--check HelloWorld", "--check self", "--bg HelloWorld", "--check Images"}
 	for {
 		command, _, err := reader.ReadLine()
 		if err != nil {
@@ -187,6 +198,8 @@ func readConsoleCommands() {
 			printHW()
 		case "--bg HelloWorld":
 			helloWorld.Background(time.Second*4, skipHelloWorldUpdate, executeHelloWorldUpdateCallBack, executeHelloWorldAfterUpdateCallBack)
+		case "--check Images":
+			CheckForUpdates(images)
 		case "--check self":
 			CheckForSelfUpdates(selfUpdateAsset)
 		case "--exit":

@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"github.com/artdarek/go-unzip"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,7 +60,7 @@ func runWindowsBatch(batchFile string) error {
 	return cmd.Start()
 }
 
-func (a Asset) applyUpdate(localUpdateFile string) (err error) {
+func (a Asset) applyUpdateOLD(localUpdateFile string) (err error) {
 	fileExt := filepath.Ext(localUpdateFile)
 	assetFile := a.getPathToAssetFile(fileExt)
 	backUpFile := a.getPathToAssetBackUpFile(assetFile)
@@ -69,6 +70,29 @@ func (a Asset) applyUpdate(localUpdateFile string) (err error) {
 	}
 	if err = os.Rename(localUpdateFile, assetFile); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (a Asset) applyUpdate(localUpdateFile string) (err error) {
+	fileExt := filepath.Ext(localUpdateFile)
+	assetFile := a.getPathToAssetFile(fileExt)
+	backUpFile := a.getPathToAssetBackUpFile(assetFile)
+	if err = os.Rename(assetFile, backUpFile); err != nil {
+		return err
+	}
+	if fileExt == zipExt {
+		uz := unzip.New(localUpdateFile, a.TargetFolder)
+		if err = uz.Extract(); err != nil {
+			return err
+		}
+		if err = os.Remove(localUpdateFile); err != nil {
+			return err
+		}
+	} else {
+		if err = os.Rename(localUpdateFile, assetFile); err != nil {
+			return err
+		}
 	}
 	return nil
 }
